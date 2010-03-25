@@ -33,6 +33,10 @@ class Stack < Array
     self
   end
 
+  def pop
+    self.pop
+  end
+
   def plus
     right, left = pop, pop
     self << left + right

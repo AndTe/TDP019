@@ -19,7 +19,7 @@ class Test_Stack < Test::Unit::TestCase
     @engine.clear
     program = readPostfixSource("1 3 + exit")
     @engine.eat(program)
-    assert(@engine, [4])
+    assert_equal(@engine, [4])
   end
 
   def minus
@@ -70,6 +70,9 @@ class Test_Stack < Test::Unit::TestCase
     program = readPostfixSource("3 3 <= exit")
     @engine.eat(program)
     assert(@engine, [true])
+    program = readPostfixSource("1 3 + exit")
+    @engine.eat(program)
+    assert(@engine, [4])
 
     @engine.clear
     program = readPostfixSource("2 3 <= exit")
