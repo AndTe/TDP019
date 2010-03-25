@@ -3,91 +3,91 @@ require 'Stack.rb'
 require 'PostfixParser.rb'
 
 class Test_PostfixParser < Test::Unit::TestCase
-  def exit
+  def test_exit
     program = PostfixParseString("exit")
-    assert(program, [:exit])
+    assert_equal(program, [:exit])
   end
 
-  def plus
+  def test_plus
     program = PostfixParseString("+")
-    assert(program, [:plus])
+    assert_equal(program, [:plus])
   end
 
-  def minus
+  def test_minus
     program = PostfixParseString("-")
-    assert(program, [:minus])
+    assert_equal(program, [:minus])
   end
 
-  def multiply
+  def test_multiply
     program = PostfixParseString("*")
-    assert(program, [:multiply])
+    assert_equal(program, [:multiply])
   end
 
-  def divide
+  def test_divide
     program = PostfixParseString("/")
-    assert(program, [:divide])
+    assert_equal(program, [:divide])
   end
 
-  def less
+  def test_less
     program = PostfixParseString("<")
-    assert(program, [:less])
+    assert_equal(program, [:less])
   end
 
-  def lessequals
-    program = PostfixParseString("<=")
-    assert(program, [:lessequals])
-  end
+  #~ def test_lessequal
+    #~ program = PostfixParseString("<=")
+    #~ assert_equal(program, [:operator_<=])
+  #~ end
 
-  def equals
+  def test_equal
     program = PostfixParseString("==")
-    assert(program, [:equals])
+    assert_equal(program, [:equals])
   end
 
-  def assign
+  def test_assign
     program = PostfixParseString("=")
-    assert(program, [:assign])
+    assert_equal(program, [:assign])
   end
 
-  def duplicate
+  def test_duplicate
     program = PostfixParseString("duplicate")
-    assert(program, [:duplicate])
+    assert_equal(program, [:duplicate])
   end
 
-  def goto
+  def test_goto
     program = PostfixParseString("goto")
-    assert(program, [:goto])
+    assert_equal(program, [:goto])
   end
 
-  def if
+  def test_if
     program = PostfixParseString("if")
-    assert(program, [:if])
+    assert_equal(program, [:if])
   end
 
-  def print
+  def test_print
     program = PostfixParseString("print")
-    assert(program, [:print])
+    assert_equal(program, [:print])
   end
 
-  def swap
+  def test_swap
     program = PostfixParseString("swap")
-    assert(program, [:swap])
+    assert_equal(program, [:swap])
   end
 
-  def pop
+  def test_pop
     program = PostfixParseString("pop")
-    assert(program, [:pop])
+    assert_equal(program, [:pop])
   end
 
-  def PostfixParseFile
-    program = PostfixParseFile("test_postfixsource.pf")
-    assert(program, [7, 4, 3, :less, :if, 1, 3, 2, :swap, :exit])
-  end
+  #~ def PostfixParseFile
+    #~ program = PostfixParseFile("test_postfixsource.pf")
+    #~ assert_equal(program, [7, 4, 3, :less, :if, 1, 3, 2, :swap, :exit])
+  #~ end
 
-  def comments
-    program = PostfixParseString("1(comment 1) 3 swap(comment 2, comment 3) exit (comment4)")
-    assert(program, [1, 3, :swap, :exit])
+  #~ def comments
+    #~ program = PostfixParseString("1(comment 1) 3 swap(comment 2, comment 3) exit (comment4)")
+    #~ assert_equal(program, [1, 3, :swap, :exit])
 
-    program = PostfixParseStringDebug("1(comment 1) 3 swap(comment 2, comment 3) exit (comment4)")
-    assert(program, [[1, "comment 0"], [3, nil], [:swap, "comment 2, comment 3"], [:exit, "comment4"]])
-  end
+    #~ program = PostfixParseStringDebug("1(comment 1) 3 swap(comment 2, comment 3) exit (comment4)")
+    #~ assert_equal(program, [[1, "comment 0"], [3, nil], [:swap, "comment 2, comment 3"], [:exit, "comment4"]])
+  #~ end
 end

@@ -8,152 +8,135 @@ class Test_Stack < Test::Unit::TestCase
   end
 
 
-  def exit
+  def test_exit
     @engine.clear
-    program = readPostfixSource("1 exit 2")
+    program = PostfixParseString("1 exit 2")
     @engine.eat(program)
-    assert(@engine, [1])
+    assert_equal(@engine, [1])
   end
 
-  def plus
+  def test_plus
     @engine.clear
-    program = readPostfixSource("1 3 + exit")
+    program = PostfixParseString("1 3 + exit")
     @engine.eat(program)
     assert_equal(@engine, [4])
   end
 
-  def minus
+  def test_minus
     @engine.clear
-    program = readPostfixSource("1 3 - exit")
+    program = PostfixParseString("1 3 - exit")
     @engine.eat(program)
-    assert(@engine, [-2])
+    assert_equal(@engine, [-2])
   end
 
-  def multiply
+  def test_multiply
     @engine.clear
-    program = readPostfixSource("13 3 * exit")
+    program = PostfixParseString("13 3 * exit")
     @engine.eat(program)
-    assert(@engine, [39])
+    assert_equal(@engine, [39])
   end
 
-  def divide
+  def test_divide
     @engine.clear
-    program = readPostfixSource("9 3 / exit")
+    program = PostfixParseString("9 3 / exit")
     @engine.eat(program)
-    assert(@engine, [3])
+    assert_equal(@engine, [3])
   end
 
-  def less
-    @engine.clear
-    program = readPostfixSource("9 3 < exit")
+  def test_less
+    @engine.reset
+    program = PostfixParseString("9 3 < exit")
     @engine.eat(program)
-    assert(@engine, [false])
+    assert_equal(@engine, [false])
 
-    @engine.clear
-    program = readPostfixSource("3 3 < exit")
+    @engine.reset
+    program = PostfixParseString("3 3 < exit")
     @engine.eat(program)
-    assert(@engine, [false])
+    assert_equal(@engine, [false])
 
-    @engine.clear
-    program = readPostfixSource("2 3 < exit")
+    @engine.reset
+    program = PostfixParseString("2 3 < exit")
     @engine.eat(program)
-    assert(@engine, [true])
+    assert_equal(@engine, [true])
   end
 
-  def lessequals
-    @engine.clear
-    program = readPostfixSource("9 3 <= exit")
+  def test_equals
+    @engine.reset
+    program = PostfixParseString("9 3 == exit")
     @engine.eat(program)
-    assert(@engine, [false])
+    assert_equal(@engine, [false])
 
-    @engine.clear
-    program = readPostfixSource("3 3 <= exit")
+    @engine.reset
+    program = PostfixParseString("3 3 == exit")
     @engine.eat(program)
-    assert(@engine, [true])
-    program = readPostfixSource("1 3 + exit")
-    @engine.eat(program)
-    assert(@engine, [4])
+    p program
+    p @engine.viewlunch
+    assert_equal(@engine, [true])
 
-    @engine.clear
-    program = readPostfixSource("2 3 <= exit")
+    @engine.reset
+    program = PostfixParseString("2 3 == exit")
     @engine.eat(program)
-    assert(@engine, [true])
+    assert_equal(@engine, [false])
   end
 
-  def equals
+  def test_assign
     @engine.clear
-    program = readPostfixSource("9 3 == exit")
+    p @engine
+    program = PostfixParseString("1 1 1 2 = exit")
     @engine.eat(program)
-    assert(@engine, [false])
-
-    @engine.clear
-    program = readPostfixSource("3 3 == exit")
-    @engine.eat(program)
-    assert(@engine, [true])
-
-    @engine.clear
-    program = readPostfixSource("2 3 == exit")
-    @engine.eat(program)
-    assert(@engine, [false])
+    assert_equal(@engine, [2, 1])
   end
 
-  def assign
+  def test_duplicate
     @engine.clear
-    program = readPostfixSource("1 1 1 2 = exit")
+    program = PostfixParseString("42 0 duplicate exit")
     @engine.eat(program)
-    assert(@engine, [2, 1])
+    assert_equal(@engine, [42, 42])
   end
 
-  def duplicate
+  def test_goto
     @engine.clear
-    program = readPostfixSource("42 duplicate exit")
-    @engine.eat(program)
-    assert(@engine, [42, 42])
-  end
-
-  def goto
-    @engine.clear
-    program = readPostfixSource("0 1 5 goto 10 2 3 exit")
+    program = PostfixParseString("0 1 5 goto 10 2 3 exit")
     @engine.eat(program)
     lunch = @engine.viewlunch.collect {| el | el[1]}
-    assert(@engine, [0, 1, 2, 3])
-    assert(lunch, [0, 1, 5, :goto, 2, 3, :exit])
+    assert_equal(@engine, [0, 1, 2, 3])
+    assert_equal(lunch, [0, 1, 5, :goto, 2, 3, :exit])
   end
 
-  def if
-    @engine.clear
-    program = readPostfixSource("4 true if 10 11 exit")
+  def test_if
+    @engine.reset
+    program = PostfixParseString("4 true if 10 11 exit")
     @engine.eat(program)
     lunch = @engine.viewlunch.collect {| el | el[1]}
-    assert(@engine, [10, 11])
-    assert(viewlunch, [0, 1, 5, :goto, 2, 3, :exit])
+    assert_equal(@engine, [10, 11])
+    assert_equal(lunch, [4, true, :if, 10, 11, :exit])
 
-    @engine.clear
-    program = readPostfixSource("4 false if 10 11 exit")
+    @engine.reset
+    program = PostfixParseString("4 false if 10 11 exit")
     lunch = @engine.viewlunch.collect {| el | el[1]}
     @engine.eat(program)
-    assert(@engine, [11])
-    assert(viewlunch, [4, false, :if, 11, :exit])
+    assert_equal(@engine, [11])
+    assert_equal(lunch, [4, false, :if, 11, :exit])
   end
 
-  def print
+  def test_print
     @engine.clear
-    program = readPostfixSource("1 42 print 2 exit")
+    program = PostfixParseString("1 42 print 2 exit")
     @engine.eat(program)
-    assert(@engine, [1, 2])
+    assert_equal(@engine, [1, 2])
   end
 
-  def swap
+  def test_swap
     @engine.clear
-    program = readPostfixSource("1 3 2 swap 4 exit")
+    program = PostfixParseString("1 3 2 swap 4 exit")
     @engine.eat(program)
-    assert(@engine, [1, 2, 3, 4])
+    assert_equal(@engine, [1, 2, 3, 4])
   end
 
-  def pop
+  def test_pop
     @engine.clear
-    program = readPostfixSource("1 3 pop 2 4 pop 3 4 exit")
+    program = PostfixParseString("1 3 pop 2 4 pop 3 4 exit")
     @engine.eat(program)
-    assert(@engine, [1, 2, 3, 4])
+    assert_equal(@engine, [1, 2, 3, 4])
   end
 end

@@ -33,28 +33,31 @@ class Stack < Array
     self
   end
 
-  def pop
-    self.pop
+  def reset
+    self.clear
+    @eaten.clear
+    @programindex = 0
+    @continueprogram = true
   end
 
   def plus
     right, left = pop, pop
-    self << left + right
+    self << (left + right)
   end
 
   def minus
     right, left = pop, pop
-    self << left - right
+    self << (left - right)
   end
 
   def multiply
     right, left = pop, pop
-    self << left * right
+    self << (left * right)
   end
 
   def divide
     right, left = pop, pop
-    self << left / right
+    self << (left / right)
   end
 
   def assign
@@ -70,17 +73,13 @@ class Stack < Array
 
   def less
     right, left = pop, pop
-    self << left < right
-  end
-
-  def lessequals
-    right, left = pop, pop
-    self << left <= right
+    self << (left < right)
   end
 
   def equals
+	  p @programindex
     right, left = pop, pop
-    self << left == right
+    self << (left == right)
   end
 
   def goto
@@ -112,13 +111,13 @@ class Stack < Array
 
 end
 
-engine = Stack.new
-postfixSource = "1 2 + exit"
+#~ engine = Stack.new
+#postfixSource = "1 2 + exit"
 #program = readPostfixSource(postfixSource)
-program = [1,2, :plus, :exit]
+#~ program = [1,2, :plus, :exit]
 #program = [0, 0, 7 ,engine.method(:assign), engine.method(:exit)]
-p engine
-p program
-engine.eat(program)
-p engine
-p engine.viewlunch
+#p engine
+#p program
+#~ engine.eat(program)
+#~ p engine
+#~ p engine.viewlunch
