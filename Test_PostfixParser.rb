@@ -33,11 +33,6 @@ class Test_PostfixParser < Test::Unit::TestCase
     assert_equal(program, [:less])
   end
 
-  #~ def test_lessequal
-    #~ program = PostfixParseString("<=")
-    #~ assert_equal(program, [:operator_<=])
-  #~ end
-
   def test_equal
     program = PostfixParseString("==")
     assert_equal(program, [:equals])
@@ -76,6 +71,14 @@ class Test_PostfixParser < Test::Unit::TestCase
   def test_pop
     program = PostfixParseString("pop")
     assert_equal(program, [:pop])
+  end
+
+  def test_booleans
+    program = PostfixParseString("true")
+    assert_equal(program, [:true])
+
+    program = PostfixParseString("false")
+    assert_equal(program, [:false])
   end
 
   #~ def PostfixParseFile

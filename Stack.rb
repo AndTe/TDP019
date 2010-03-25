@@ -64,7 +64,7 @@ class Stack < Array
     value, index = pop, pop
     self[size - index - 1] = value
   end
-  
+
   def duplicate
     index = pop
     value = self[size-index-1]
@@ -86,7 +86,7 @@ class Stack < Array
      address = pop
      @programindex = address
   end
-  
+
   def if
     truthvalue, address = pop, pop
     if not truthvalue then
@@ -105,19 +105,16 @@ class Stack < Array
     self << value1 << value2
   end
 
+  def true
+    self << true
+  end
+
+  def false
+    self << false
+  end
+
   def exit
     @continueprogram = false
   end
 
 end
-
-#~ engine = Stack.new
-#postfixSource = "1 2 + exit"
-#program = readPostfixSource(postfixSource)
-#~ program = [1,2, :plus, :exit]
-#program = [0, 0, 7 ,engine.method(:assign), engine.method(:exit)]
-#p engine
-#p program
-#~ engine.eat(program)
-#~ p engine
-#~ p engine.viewlunch
