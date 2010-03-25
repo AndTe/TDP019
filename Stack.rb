@@ -24,8 +24,8 @@ class Stack < Array
 
       @programindex += 1
 
-      if code.class == Method
-        code.call
+      if code.class == Symbol
+        self.method(code).call
       else # not a funciton call push value to stack
         self << code
       end
@@ -34,12 +34,34 @@ class Stack < Array
   end
 
   def plus
-    self << pop + pop
+    right, left = pop, pop
+    self << left + right
   end
 
   def minus
     right, left = pop, pop
     self << left - right
+  end
+
+  def multiply
+    right, left = pop, pop
+    self << left * right
+  end
+
+  def divide
+    right, left = pop, pop
+    self << left / right
+  end
+
+  def assign
+    value, index = pop, pop
+    self[size - index - 1] = value
+  end
+  
+  def duplicate
+    index = pop
+    value = self[size-index-1]
+    self << value
   end
 
   def less
@@ -57,6 +79,29 @@ class Stack < Array
     self << left == right
   end
 
+  def goto
+     address = pop
+     @programindex = address
+  end
+  
+  def if
+    truthvalue, address = pop, pop
+    if not truthvalue then
+      self << address
+      goto
+    end
+  end
+
+  def print
+    value = pop
+    puts value
+  end
+
+  def swap
+    value1, value2 = pop, pop
+    self << value1 << value2
+  end
+
   def exit
     @continueprogram = false
   end
@@ -66,7 +111,10 @@ end
 engine = Stack.new
 postfixSource = "1 2 + exit"
 #program = readPostfixSource(postfixSource)
-program = [1,2, engine.method(:plus), engine.method(:exit)]
+program = [1,2, :plus, :exit]
+#program = [0, 0, 7 ,engine.method(:assign), engine.method(:exit)]
 p engine
 p program
-#engine.eat(program)
+engine.eat(program)
+p engine
+p engine.viewlunch
