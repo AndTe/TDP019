@@ -2,12 +2,17 @@ class Stack < Array
   def initialize
     @programindex = 0
     @continueprogram = true
-
+    @heap = {}
+    @heapindex = 1
     @eaten = [] # Debug values
   end
 
   def viewlunch
     @eaten
+  end
+
+  def heap
+    @heap
   end
 
   def eat(program)
@@ -38,6 +43,8 @@ class Stack < Array
     @eaten.clear
     @programindex = 0
     @continueprogram = true
+    @heap.clear
+    @heapindex = 1
   end
 
   def plus
@@ -62,12 +69,12 @@ class Stack < Array
 
   def assign
     value, index = pop, pop
-    self[size - index - 1] = value
+    self[-1 - index] = value
   end
 
   def duplicate
     index = pop
-    value = self[size-index-1]
+    value = self[-1 - index]
     self << value
   end
 
@@ -117,4 +124,33 @@ class Stack < Array
     @continueprogram = false
   end
 
+  def reference_block(blocksize)
+    first = @heapindex
+    @heapindex += blocksize
+    (@heapindex - 1).downto(first) { | i |
+      @heap[i] = nil
+    }
+    first
+  end
+
+  # references
+  def reference
+    blocksize = pop
+    self << reference_block(blocksize)
+  end
+
+  def assign_to_reference
+    value, ref = pop, pop
+    heap[ref] = value
+  end
+
+  def reference_value
+    ref = pop
+    self << @heap[ref]
+  end
+
+  def delete_reference
+    ref = pop
+    @heap.delete[ref]
+  end
 end
