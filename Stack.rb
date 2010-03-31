@@ -151,6 +151,6 @@ class Stack < Array
 
   def delete_reference
     ref = pop
-    @heap.delete[ref]
+    @heap.delete(ref)
   end
 end

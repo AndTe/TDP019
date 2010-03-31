@@ -18,7 +18,7 @@ class PostfixParser
       token(/".*?[^\\]"/) {|m| m}
       token(/\s+/)
       token(/\d+/) {|m| m.to_i }
-      token(/duplicate|pop|goto|swap|exit|print|not|and|or|if/) {|m| m.to_sym }
+      token(/duplicate|pop|goto|swap|exit|print|not|and|or|if|assign_to_reference|reference_value|delete_reference|reference/) {|m| m.to_sym }
 
       start :expr do
         match(:atom, :expr) { |a, b| a + b}

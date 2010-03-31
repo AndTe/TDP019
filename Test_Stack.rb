@@ -139,4 +139,66 @@ class Test_Stack < Test::Unit::TestCase
     @engine.eat(program)
     assert_equal(@engine, [1, 2, 3, 4])
   end
+
+  def test_reference
+    @engine.reset
+    program = PostfixParseString("1 reference")
+    @engine.eat(program)
+    assert_equal(@engine, [1])
+    assert_equal(@engine.heap, {1 => nil})
+
+    @engine.reset
+    program = PostfixParseString("1 reference 2 reference")
+    @engine.eat(program)
+    assert_equal(@engine, [1, 2])
+    assert_equal(@engine.heap, {1 => nil, 2 => nil, 3 => nil})
+
+    @engine.reset
+    program = PostfixParseString("2 reference 1 reference")
+    @engine.eat(program)
+    assert_equal(@engine, [1, 3])
+    assert_equal(@engine.heap, {1 => nil, 2 => nil, 3 => nil})
+  end
+
+  def test_assign_to_reference
+    @engine.reset
+    program = PostfixParseString("1 reference 100 assign_to_reference")
+    @engine.eat(program)
+    assert_equal(@engine, [])
+    assert_equal(@engine.heap, {1 => 100})
+
+    @engine.reset
+    program = PostfixParseString("2 reference 1 + 100 assign_to_reference")
+    @engine.eat(program)
+    assert_equal(@engine, [])
+    assert_equal(@engine.heap, {1 => nil, 2 => 100})
+  end
+
+  def test_reference_value
+    @engine.reset
+    program = PostfixParseString("1 reference 0 duplicate 100 assign_to_reference reference_value")
+    @engine.eat(program)
+    assert_equal(@engine, [100])
+    assert_equal(@engine.heap, {1 => 100})
+
+    @engine.reset
+    program = PostfixParseString("2 reference 1 + 0 duplicate 100 assign_to_reference reference_value")
+    @engine.eat(program)
+    assert_equal(@engine, [100])
+    assert_equal(@engine.heap, {1 => nil, 2 => 100})
+  end
+
+  def test_delete_reference
+    @engine.reset
+    program = PostfixParseString("1 reference 0 duplicate 100 assign_to_reference delete_reference")
+    @engine.eat(program)
+    assert_equal(@engine, [])
+    assert_equal(@engine.heap, {})
+
+    @engine.reset
+    program = PostfixParseString("2 reference 0 duplicate 1 + delete_reference delete_reference")
+    @engine.eat(program)
+    assert_equal(@engine, [])
+    assert_equal(@engine.heap, {})
+  end
 end

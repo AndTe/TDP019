@@ -81,6 +81,26 @@ class Test_PostfixParser < Test::Unit::TestCase
     assert_equal(program, [:false])
   end
 
+  def test_reference
+    program = PostfixParseString("reference")
+    assert_equal(program, [:reference])
+  end
+
+  def test_assign_to_reference
+    program = PostfixParseString("assign_to_reference")
+    assert_equal(program, [:assign_to_reference])
+  end
+
+  def test_reference_value
+    program = PostfixParseString("reference_value")
+    assert_equal(program, [:reference_value])
+  end
+
+  def test_delete_reference
+    program = PostfixParseString("delete_reference")
+    assert_equal(program, [:delete_reference])
+  end
+
   #~ def PostfixParseFile
     #~ program = PostfixParseFile("test_postfixsource.pf")
     #~ assert_equal(program, [7, 4, 3, :less, :if, 1, 3, 2, :swap, :exit])
