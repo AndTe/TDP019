@@ -101,6 +101,21 @@ class Test_PostfixParser < Test::Unit::TestCase
     assert_equal(program, [:delete_reference])
   end
 
+  def test_and
+    program = PostfixParseString("and")
+    assert_equal(program, [:and])
+  end
+
+  def test_or
+    program = PostfixParseString("or")
+    assert_equal(program, [:or])
+  end
+
+  def test_not
+    program = PostfixParseString("not")
+    assert_equal(program, [:not])
+  end
+
   #~ def PostfixParseFile
     #~ program = PostfixParseFile("test_postfixsource.pf")
     #~ assert_equal(program, [7, 4, 3, :less, :if, 1, 3, 2, :swap, :exit])

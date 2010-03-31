@@ -153,4 +153,21 @@ class Stack < Array
     ref = pop
     @heap.delete(ref)
   end
+
+  # boolean operators
+  def and
+    value1, value2 = pop, pop
+    self << (value2 and value1)
+  end
+
+  def or
+    value1, value2 = pop, pop
+    self << (value2 or value1)
+  end
+
+  def not
+    value = pop
+    self << (not value)
+  end
+
 end

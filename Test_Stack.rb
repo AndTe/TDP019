@@ -201,4 +201,61 @@ class Test_Stack < Test::Unit::TestCase
     assert_equal(@engine, [])
     assert_equal(@engine.heap, {})
   end
+
+  def test_and
+    @engine.reset
+    program = PostfixParseString("false false and")
+    @engine.eat(program)
+    assert_equal(@engine, [false])
+
+    @engine.reset
+    program = PostfixParseString("false true and")
+    @engine.eat(program)
+    assert_equal(@engine, [false])
+
+    @engine.reset
+    program = PostfixParseString("true false and")
+    @engine.eat(program)
+    assert_equal(@engine, [false])
+
+    @engine.reset
+    program = PostfixParseString("true true and")
+    @engine.eat(program)
+    assert_equal(@engine, [true])
+  end
+
+  def test_or
+    @engine.reset
+    program = PostfixParseString("false false or")
+    @engine.eat(program)
+    assert_equal(@engine, [false])
+
+    @engine.reset
+    program = PostfixParseString("false true or")
+    @engine.eat(program)
+    assert_equal(@engine, [true])
+
+    @engine.reset
+    program = PostfixParseString("true false or")
+    @engine.eat(program)
+    assert_equal(@engine, [true])
+
+    @engine.reset
+    program = PostfixParseString("true true or")
+    @engine.eat(program)
+    assert_equal(@engine, [true])
+  end
+
+  def test_not
+    @engine.reset
+    program = PostfixParseString("false not")
+    @engine.eat(program)
+    assert_equal(@engine, [true])
+
+    @engine.reset
+    program = PostfixParseString("true not")
+    @engine.eat(program)
+    assert_equal(@engine, [false])
+  end
+
 end
