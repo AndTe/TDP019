@@ -116,10 +116,10 @@ class Test_PostfixParser < Test::Unit::TestCase
     assert_equal(program, [:not])
   end
 
-  #~ def PostfixParseFile
-    #~ program = PostfixParseFile("test_postfixsource.pf")
-    #~ assert_equal(program, [7, 4, 3, :less, :if, 1, 3, 2, :swap, :exit])
-  #~ end
+  def PostfixParseFile
+    program = PostfixParseFile("test_postfixsource.pf")
+    assert_equal(program, [7, 4, 3, :less, :if, 1, 3, 2, :swap, :exit])
+  end
 
   #~ def comments
     #~ program = PostfixParseString("1(comment 1) 3 swap(comment 2, comment 3) exit (comment4)")

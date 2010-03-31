@@ -50,3 +50,9 @@ def PostfixParseString(postfix)
   p = PostfixParser.new
   p.parse_string postfix
 end
+
+def PostfixParseFile(sourcefile)
+  source = open(sourcefile)
+  p = PostfixParser.new
+  p.parse_string source.read
+end
