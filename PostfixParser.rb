@@ -12,23 +12,22 @@ class PostfixParser
       token(/==/) {:equals}
       token(/=/) {:assign}
       token(/</) {:less}
-      token(/true/) {:true}
-      token(/false/) {:false}
-      token(/nil/) {nil}
       token(/".*?[^\\]"/) {|m| m}
       token(/\s+/)
       token(/\d+/) {|m| m.to_i }
-      token(/duplicate|pop|goto|swap|exit|print|not|and|or|if|assign_to_reference|reference_value|delete_reference|reference/) {|m| m.to_sym }
+      token(/duplicate|pop|goto|swap|exit|print|not|and|or|if|assign_to_reference|reference_value|delete_reference|reference|true|false/) {|m| m.to_sym}
 
       start :expr do
-        match(:atom, :expr) { |a, b| a + b}
-        match(:atom) { |a| a}
+        match(:atom, :expr) {|a, b| [a] + b}
+        match(:atom) {|a| [a]}
       end
 
       rule :atom do
-        match(Integer) { |a| [a]}
-        match(String){ |a| [a]}
-        match(Symbol){ |a| [a]}
+        match(:true) {true}
+        match(:false) {false}
+        match(Integer) {|a| a}
+        match(String) {|a| a}
+        match(Symbol) {|a| a}
       end
     end
   end

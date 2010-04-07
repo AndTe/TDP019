@@ -75,10 +75,10 @@ class Test_PostfixParser < Test::Unit::TestCase
 
   def test_booleans
     program = PostfixParseString("true")
-    assert_equal([:true], program)
+    assert_equal([true], program)
 
     program = PostfixParseString("false")
-    assert_equal([:false], program)
+    assert_equal([false], program)
   end
 
   def test_reference

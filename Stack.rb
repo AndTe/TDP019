@@ -112,14 +112,6 @@ class Stack < Array
     self << value1 << value2
   end
 
-  def true
-    self << true
-  end
-
-  def false
-    self << false
-  end
-
   def exit
     @continueprogram = false
   end

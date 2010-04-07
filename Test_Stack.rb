@@ -109,14 +109,14 @@ class Test_Stack < Test::Unit::TestCase
     @engine.eat(program)
     lunch = @engine.viewlunch.collect {| el | el[1]}
     assert_equal([10, 11], @engine)
-    assert_equal([4, :true, :if, 10, 11, :exit], lunch)
+    assert_equal([4, true, :if, 10, 11, :exit], lunch)
 
     @engine.reset
     program = PostfixParseString("4 false if 10 11 exit")
     @engine.eat(program)
     lunch = @engine.viewlunch.collect {| el | el[1]}
     assert_equal([11], @engine)
-    assert_equal([4, :false, :if, 11, :exit], lunch)
+    assert_equal([4, false, :if, 11, :exit], lunch)
   end
 
   def test_print
