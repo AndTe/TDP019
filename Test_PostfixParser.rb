@@ -38,16 +38,6 @@ class Test_PostfixParser < Test::Unit::TestCase
     assert_equal([:equals], program)
   end
 
-  def test_assign
-    program = PostfixParseString("=")
-    assert_equal([:assign], program)
-  end
-
-  def test_duplicate
-    program = PostfixParseString("duplicate")
-    assert_equal([:duplicate], program)
-  end
-
   def test_goto
     program = PostfixParseString("goto")
     assert_equal([:goto], program)
@@ -99,6 +89,11 @@ class Test_PostfixParser < Test::Unit::TestCase
   def test_delete_reference
     program = PostfixParseString("delete_reference")
     assert_equal([:delete_reference], program)
+  end
+
+  def test_stacktop
+    program = PostfixParseString("stacktop")
+    assert_equal([:stacktop], program)
   end
 
   def test_and

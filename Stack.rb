@@ -1,18 +1,15 @@
-class Stack < Array
+class Stack < Hash
   def initialize
     @programindex = 0
     @continueprogram = true
-    @heap = {}
-    @heapindex = 1
+    @stackindex = 0
+    @heapindex = 0
     @eaten = [] # Debug values
+
   end
 
   def viewlunch
     @eaten
-  end
-
-  def heap
-    @heap
   end
 
   def eat(program)
@@ -43,8 +40,24 @@ class Stack < Array
     @eaten.clear
     @programindex = 0
     @continueprogram = true
-    @heap.clear
-    @heapindex = 1
+    @stackindex = 0
+    @heapindex = 0
+  end
+
+  def << (value)
+    @stackindex += 1
+    self[@stackindex] = value
+    self
+  end
+
+  def pop
+    value = self.delete(@stackindex)
+    @stackindex -= 1
+    value
+  end
+
+  def stacktop
+    self << @stackindex
   end
 
   def plus
@@ -65,17 +78,6 @@ class Stack < Array
   def divide
     right, left = pop, pop
     self << (left / right)
-  end
-
-  def assign
-    value, index = pop, pop
-    self[-1 - index] = value
-  end
-
-  def duplicate
-    index = pop
-    value = self[-1 - index]
-    self << value
   end
 
   def less
@@ -117,12 +119,12 @@ class Stack < Array
   end
 
   def reference_block(blocksize)
-    first = @heapindex
-    @heapindex += blocksize
-    (@heapindex - 1).downto(first) { | i |
-      @heap[i] = nil
-    }
-    first
+    to = @heapindex - 1
+    @heapindex -= blocksize
+    for i in (@heapindex..to)
+      self[i] = nil
+    end
+    @heapindex
   end
 
   # references
@@ -133,17 +135,17 @@ class Stack < Array
 
   def assign_to_reference
     value, ref = pop, pop
-    heap[ref] = value
+    self[ref] = value
   end
 
   def reference_value
     ref = pop
-    self << @heap[ref]
+    self << self[ref]
   end
 
   def delete_reference
     ref = pop
-    @heap.delete(ref)
+    self.delete(ref)
   end
 
   # boolean operators
