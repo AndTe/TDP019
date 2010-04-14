@@ -31,7 +31,7 @@ class Stack < Array
 
       if code.class == Symbol
         self.method(code).call
-      else # not a funciton call push value to stack
+      else # not a function call push value to stack
         self << code
       end
     end
