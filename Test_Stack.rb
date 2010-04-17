@@ -7,7 +7,6 @@ class Test_Stack < Test::Unit::TestCase
     @engine = Stack.new
   end
 
-
   def test_exit
     @engine.reset
     program = PostfixParseString("1 exit 2")
@@ -257,5 +256,4 @@ class Test_Stack < Test::Unit::TestCase
     @engine.eat(program)
     assert_equal([false], @engine)
   end
-
 end

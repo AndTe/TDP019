@@ -1,9 +1,7 @@
 require 'rdparse.rb'
 
 class PostfixParser
-
   def initialize
-    @p = []
     @PostParser = Parser.new("postfix parser") do
       token(/\+/) {:plus}
       token(/-/) {:minus}
@@ -35,14 +33,6 @@ class PostfixParser
   def parse_string(str)
     @PostParser.parse str
   end
-
-  #~ def log(state = false)
-    #~ if state
-      #~ @diceParser.logger.level = Logger::DEBUG
-    #~ else
-      #~ @diceParser.logger.level = Logger::WARN
-    #~ end
-  #~ end
 end
 
 def PostfixParseString(postfix)
