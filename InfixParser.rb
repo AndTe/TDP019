@@ -29,7 +29,11 @@ class InfixParser
       end
 
       rule :variable_declaration do
-        match(:datatypes, :identifier, "=", :expression) {|a, b, _, c| "[#{a}:#{b} = #{c}]"}
+        match(:datatypes, :assignment_expr) {|a, b| "[variable_declaration:#{a} #{b}]"}
+      end
+
+      rule :assignment_expr do
+        match(:identifier, "=", :expression){|l, op, r| wrap(l, op, r)}
       end
 
       rule :datatypes do
@@ -78,7 +82,8 @@ class InfixParser
         match(:expression_value) {|m| m}
       end
 
-      rule  :expression_value do
+      rule :expression_value do
+        match(:assignment_expr) {|m| m}
         match("(", :expression, ")") {|_, m, _| "#{m}"}
         match(Fixnum)  {|m| m.to_s}
         match(:identifier) {|m| m}
