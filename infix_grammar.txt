@@ -1,0 +1,80 @@
+<digit>				::=	0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
+
+<nonzero digit>			::=	1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
+
+<letter>			::=	“A”...”Ö” | “a”...”ö”
+
+<alpha-numeric character>	::=	<digit> | <letter>
+
+<identifier>			::=	<letter>+ <alpha-numeric character>*
+
+<string>			::=	'“'<stringitem>*'”'
+
+<logical value>			::=	“true” | “false”
+
+<nil value>			::=	“nil”
+
+<stringitem>			::=	<stringchar> | <escape sequence>
+
+<stringchar>			::=	<any character except the quote>
+
+<escape sequence>		::=	“\” <any ASCII character>
+
+<integer>			::=	[“-”] <digit> | [“-”] <nonzero digit><digit>+
+
+<float>				::=	[“-”] 0”.”digit+ | [“-”] <non-zero digit><digit>*”.”<digit>+
+
+<array>				::=	“[“<arrayitem>(”,” <arrayitem of the same type as the first>)* “]” | “[]”
+
+<arrayitem>			::=	<variable>|<string>|<integer>|<float>
+
+<variable declaration>		::=	<type><identifier> “=” <expression> <stmt_end>
+
+<variable assignment>		::=	<identifier> “=” <expression> <stmt_end>
+
+<variable assignment>		::=	<identifier> “=” <expression> <stmt_end>
+
+<stmt_end>			::=	“;”
+
+<statement>			::=	<statement list> | <compound statement>
+
+<statement list>		::=	<simple statement>*
+
+<simple statement>		::=	<variable declaration>
+					| <return-stmt>
+					| <assignment>
+
+<compound statment>		::=	<class declaration>
+					| <function declaration>
+					| <for-stmt>
+					| <while-stmt>
+					| <if-stmt>
+
+<plus-expr>			::=	<multiply-expr>
+					| <plus-expr> “+” <multiply-expr>
+					| <plus-expr> “-” <multiply-expr>
+
+<multiply-expr>			::=	<expression-value>
+					| <multiply-expr> “*” <expression-value>
+					| <multiply-expr> “/” <expression-value>
+
+<expression-value>		::=	<float> | <integer> | <string> | <array>
+
+<assignment>			::=	<variable>(“,”<variable>)* “=” <expression>(“,”<expression>)*
+
+<function declaration>		::=
+
+<function call>			::=
+
+<variable declaration>		::=
+
+<class declaration>		::=
+
+<for-stmt>			::=
+
+<while-stmt>			::=
+
+<if-stmt>			::=
+
+<return-stmt>			::=
+
