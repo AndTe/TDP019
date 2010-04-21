@@ -1,80 +1,84 @@
-<digit>				::=	0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
+<digit>				::=		0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
 
-<nonzero digit>			::=	1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
+<nonzero digit>			::=		1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
 
-<letter>			::=	“A”...”Ö” | “a”...”ö”
+<letter>			::=		“A”...”Ö” | “a”...”ö”
 
-<alpha-numeric character>	::=	<digit> | <letter>
+<alpha-numeric character>	::=		<digit> | <letter>
 
-<identifier>			::=	<letter>+ <alpha-numeric character>*
+<identifier>			::=		<letter>+ <alpha-numeric character>*
 
-<string>			::=	'“'<stringitem>*'”'
+<string>			::=		'“'<stringitem>*'”'
 
-<logical value>			::=	“true” | “false”
+<datatype>			::=		
 
-<nil value>			::=	“nil”
+<logical value>			::=		“true” | “false”
 
-<stringitem>			::=	<stringchar> | <escape sequence>
+<nil value>			::=		“nil”
 
-<stringchar>			::=	<any character except the quote>
+<stringitem>			::=		<stringchar> | <escape sequence>
 
-<escape sequence>		::=	“\” <any ASCII character>
+<stringchar>			::=		<any character except the quote>
 
-<integer>			::=	[“-”] <digit> | [“-”] <nonzero digit><digit>+
+<escape sequence>		::=		“\” <any ASCII character>
 
-<float>				::=	[“-”] 0”.”digit+ | [“-”] <non-zero digit><digit>*”.”<digit>+
+<integer>			::=		[“-”] <digit> | [“-”] <nonzero digit><digit>+
 
-<array>				::=	“[“<arrayitem>(”,” <arrayitem of the same type as the first>)* “]” | “[]”
+<float>				::=		[“-”] 0”.”digit+ | [“-”] <non-zero digit><digit>*”.”<digit>+
 
-<arrayitem>			::=	<variable>|<string>|<integer>|<float>
+<array>				::=		“[“<arrayitem>(”,” <arrayitem of the same type as the first>)* “]” | “[]”
 
-<variable declaration>		::=	<type><identifier> “=” <expression> <stmt_end>
+<arrayitem>			::=		<variable>|<string>|<integer>|<float>
 
-<variable assignment>		::=	<identifier> “=” <expression> <stmt_end>
+<variable>			::=		<identifier>
 
-<variable assignment>		::=	<identifier> “=” <expression> <stmt_end>
+<variable declaration>		::=		<datatype> <variable> “=” <expression> <stmt_end>
 
-<stmt_end>			::=	“;”
+<variable assignment>		::=		<variable> “=” <expression> <stmt_end>
 
-<statement>			::=	<statement list> | <compound statement>
+<stmt_end>			::=		“;”
 
-<statement list>		::=	<simple statement>*
+<statement>			::=		<statement list> | <compound statement>
 
-<simple statement>		::=	<variable declaration>
-					| <return-stmt>
-					| <assignment>
+<statement list>		::=		<simple statement>*
 
-<compound statment>		::=	<class declaration>
-					| <function declaration>
-					| <for-stmt>
-					| <while-stmt>
-					| <if-stmt>
+<simple statement>		::=		<variable declaration>
+						| <return-stmt>
+						| <assignment>
 
-<plus-expr>			::=	<multiply-expr>
-					| <plus-expr> “+” <multiply-expr>
-					| <plus-expr> “-” <multiply-expr>
+<compound statment>		::=		<class declaration>
+						| <function declaration>
+						| <for-stmt>
+						| <while-stmt>
+						| <if-stmt>
 
-<multiply-expr>			::=	<expression-value>
-					| <multiply-expr> “*” <expression-value>
-					| <multiply-expr> “/” <expression-value>
+<plus-expr>			::=		<multiply-expr>
+						| <plus-expr> “+” <multiply-expr>
+						| <plus-expr> “-” <multiply-expr>
 
-<expression-value>		::=	<float> | <integer> | <string> | <array>
+<multiply-expr>			::=		<expression-value>
+						| <multiply-expr> “*” <expression-value>
+						| <multiply-expr> “/” <expression-value>
 
-<assignment>			::=	<variable>(“,”<variable>)* “=” <expression>(“,”<expression>)*
+<expression-value>		::=		<float> | <integer> | <string> | <array>
 
-<function declaration>		::=
+<function declaration>		::=		
 
-<function call>			::=
+<function call>			::=		
 
-<variable declaration>		::=
+<variable declaration>		::=		
 
-<class declaration>		::=
+<class declaration>		::=		
 
-<for-stmt>			::=
+<for-stmt>			::=		"for" "(" <statement>? ";" <expression> ";" <statement>? ")" <scope>
+						| "for" "(" <variable> ";" <variable> ")" <scope>
 
-<while-stmt>			::=
+<while-stmt>			::=		"while" "(" <expression> ")" <scope>
 
-<if-stmt>			::=
+<if-stmt>			::=		"if" "(" <expression> ")" <scope> <else-stmt>?
 
-<return-stmt>			::=
+<else-stmt>			::=		"else" <scope>
 
+<return-stmt>			::=		
+
+<scope>				::=		"{" statement* "}"
