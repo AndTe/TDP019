@@ -1,84 +1,115 @@
-<digit>				::=		0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
+<program>			::=		[<variable_declaration> <function_declaration>]*
 
-<nonzero digit>			::=		1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
+<nonzero_digit>			::=		1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
+
+<digit>				::=		0 | <nonzero_digit>
 
 <letter>			::=		“A”...”Ö” | “a”...”ö”
 
-<alpha-numeric character>	::=		<digit> | <letter>
-
-<identifier>			::=		<letter>+ <alpha-numeric character>*
+<alpha_numeric_character>	::=		<digit> | <letter>
 
 <string>			::=		'“'<stringitem>*'”'
 
-<datatype>			::=		
+<logical_value>			::=		“true” | “false”
 
-<logical value>			::=		“true” | “false”
+<nil_value>			::=		“nil”
 
-<nil value>			::=		“nil”
-
-<stringitem>			::=		<stringchar> | <escape sequence>
+<stringitem>			::=		<stringchar> | <escape_sequence>
 
 <stringchar>			::=		<any character except the quote>
 
-<escape sequence>		::=		“\” <any ASCII character>
+<escape_sequence>		::=		“\” <any ASCII character>
 
-<integer>			::=		[“-”] <digit> | [“-”] <nonzero digit><digit>+
+<integer>			::=		[“-”] <digit> | [“-”] <nonzero_digit><digit>+
 
 <float>				::=		[“-”] 0”.”digit+ | [“-”] <non-zero digit><digit>*”.”<digit>+
 
-<array>				::=		“[“<arrayitem>(”,” <arrayitem of the same type as the first>)* “]” | “[]”
+<array>				::=		“[“<arrayitem>(”,” <arrayitem of the same type as the first>)* “]”
+						| “[]”
 
-<arrayitem>			::=		<variable>|<string>|<integer>|<float>
+<arrayitem>			::=		<variable> | <string> | <integer> | <float>
+
+<identifier>			::=		<letter>+ <alpha_numeric_character>*
+
+<datatype>			::=		<identifier>
 
 <variable>			::=		<identifier>
 
-<variable declaration>		::=		<datatype> <variable> “=” <expression> <stmt_end>
+<global_variable>		::=		<variable>
 
-<variable assignment>		::=		<variable> “=” <expression> <stmt_end>
+<expression_list>		::=		<expression>
+						| <expression> ("," <expression>)+
+
+<expression>			::=		<or_expr>
+
+<or_expr>			::=		<or_expr> "or" <and_expr>
+						| <and_expr>
+
+<and_expr>			::=		<and_expr> "and" <not_expr>
+						| <not_expr>
+
+<not_expr>			::=		"not" <not_expr>
+						| <comparison_expr>
+
+<comparison_expr>		::=		<plus_expr>
+						| <comparison_expr> "<=" <plus_expr>
+						| <comparison_expr> ">=" <plus_expr>
+						| <comparison_expr> "==" <plus_expr>
+						| <comparison_expr> "!=" <plus_expr>
+						| <comparison_expr> "<" <plus_expr>
+						| <comparison_expr> ">" <plus_expr>
+
+<plus_expr>			::=		<multiply_expr>
+						| <plus_expr> “+” <multiply_expr>
+						| <plus_expr> “-” <multiply_expr>
+
+<multiply_expr>			::=		<expression_value>
+						| <multiply_expr> “*” <expression_value>
+						| <multiply_expr> “/” <expression_value>
+
+<expression_value>		::=		<float>
+						| <integer>
+						| "(" <expression> ")"
+						| <function_call>
+
+<variable_declaration>		::=		<datatype> <variable> “=” <expression> <stmt_end>
+
+<variable_assignment>		::=		<variable> “=” <expression> <stmt_end>
 
 <stmt_end>			::=		“;”
 
-<statement>			::=		<statement list> | <compound statement>
+<statement>			::=		<statement_list> | <compound_statement>
 
-<statement list>		::=		<simple statement>*
+<statement_list>		::=		<simple_statement>*
 
-<simple statement>		::=		<variable declaration>
-						| <return-stmt>
-						| <assignment>
+<simple_statement>		::=		<variable_declaration>
+						| <return_stmt>
+						| <variable_assignment>
 
-<compound statment>		::=		<class declaration>
-						| <function declaration>
-						| <for-stmt>
-						| <while-stmt>
-						| <if-stmt>
+<compound_statment>		::=		<class declaration>
+						| <function_declaration>
+						| <for_stmt>
+						| <while_stmt>
+						| <if_stmt>
 
-<plus-expr>			::=		<multiply-expr>
-						| <plus-expr> “+” <multiply-expr>
-						| <plus-expr> “-” <multiply-expr>
+<function_identifier>		::=		<identifier>
 
-<multiply-expr>			::=		<expression-value>
-						| <multiply-expr> “*” <expression-value>
-						| <multiply-expr> “/” <expression-value>
+<function_declaration>		::=		<datatype> <function_identifier> "(" <argument_list> ")" <scope>
 
-<expression-value>		::=		<float> | <integer> | <string> | <array>
+<argument>			::=		<datatype> <variable>
 
-<function declaration>		::=		
+<argument_list>			::=		<argument>? | <argument> ("," <argument>)+
 
-<function call>			::=		
+<function_call>			::=		<function_identifier> "(" <expression_list> ")"
 
-<variable declaration>		::=		
+<for_stmt>			::=		"for" "(" <statement>? ";" <expression> ";" <statement>? ")" <scope>
 
-<class declaration>		::=		
+<while_stmt>			::=		"while" "(" <expression> ")" <scope>
 
-<for-stmt>			::=		"for" "(" <statement>? ";" <expression> ";" <statement>? ")" <scope>
-						| "for" "(" <variable> ";" <variable> ")" <scope>
+<if_stmt>			::=		"if" "(" <expression> ")" <scope> <else-stmt>?
 
-<while-stmt>			::=		"while" "(" <expression> ")" <scope>
+<else_stmt>			::=		"else" <scope>
 
-<if-stmt>			::=		"if" "(" <expression> ")" <scope> <else-stmt>?
-
-<else-stmt>			::=		"else" <scope>
-
-<return-stmt>			::=		
+<return_stmt>			::=		"return" <expression> <stmt_end>
 
 <scope>				::=		"{" statement* "}"
