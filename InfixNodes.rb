@@ -1,4 +1,4 @@
-class StackItem
+class Operand
   attr_accessor :datatype, :variableName
   def initialize(datatype, variableName=nil)
     @datatype = datatype
@@ -6,15 +6,8 @@ class StackItem
   end
 end
 
-class FunctionIdentifier
-  attr_accessor :name, :args, :return
-  def initialize(name, args, ret)
-    @name = name
-    @args = args
-    @return = ret
-  end
-end
-
+# Iterates over the constraints network, validates the node constructions
+# and generates the postfix code
 class Iterator
   attr_accessor :functions, :datatypes, :stack
   def initialize
@@ -31,11 +24,11 @@ class Iterator
     @stack.shift
   end
 
-  def pushStackItem(item)
+  def pushOperand(item)
     @stack.first.unshift(item)
   end
 
-  def popStackItem
+  def popOperand
     @stack.first.shift
   end
 
@@ -48,7 +41,7 @@ class Iterator
     @stack.first.first.variableName = name
   end
 
-  def newFunction(name, args, outdatatype)
+  def newFunctionIdentifier(name, args, outdatatype)
     @functions[[name, args]] = outdatatype
   end
 
@@ -59,15 +52,15 @@ class Iterator
     @datatypes << name
   end
 
-  def validDatatype(name)
+  def validateDatatype(name)
     @datatypes.include?(name)
   end
 
-  def findFunction(name, args)
+  def findFunctionIdentifier(name, args)
     @functions[[name, args]]
   end
 
-  def findVariable(name)
+  def getVariable(name)
     index = nil
     flat = stack.flatten
     flat.each_index {|i|
@@ -83,6 +76,7 @@ class Iterator
   end
 end
 
+# Namespace for constraints network nodes to avoid conflicts
 module Node
   class VariableDeclaration
     def initialize(datatype, variable, expression)
@@ -95,6 +89,10 @@ module Node
       e = @expression.parse(iter)
       if @datatype != e
         raise "Incompatable datatypes: #{@datatype} and #{e}"
+      end
+
+      if not iter.validateDatatype(@datatype)
+        raise "Undefined datatype: #{@datatype}"
       end
       iter.bindTopToVariable(@variable)
       true
@@ -110,13 +108,13 @@ module Node
     def parse(iter)
       rhdatatype = @rh.parse(iter)
       lhdatatype = @lh.parse(iter)
-      returndatatype = iter.findFunction("+", [rhdatatype, lhdatatype])
+      returndatatype = iter.findFunctionIdentifier("+", [rhdatatype, lhdatatype])
       if not returndatatype
         raise "Undefined function: +(#{rhdatatype}, #{lhdatatype})"
       end
-      iter.popStackItem
-      iter.popStackItem
-      iter.pushStackItem(StackItem.new(returndatatype))
+      iter.popOperand
+      iter.popOperand
+      iter.pushOperand(Operand.new(returndatatype))
       returndatatype
     end
   end
@@ -127,12 +125,12 @@ module Node
     end
 
     def parse(iter)
-      item, index = iter.findVariable(@name)
+      item, index = iter.getVariable(@name)
 
       if not item
         raise "Undefined variable: #{@name}"
       end
-      iter.pushStackItem(StackItem.new(item.datatype))
+      iter.pushOperand(Operand.new(item.datatype))
       item.datatype
     end
   end
@@ -143,7 +141,7 @@ module Node
     end
 
     def parse(iter)
-      iter.pushStackItem(StackItem.new("integer"))
+      iter.pushOperand(Operand.new("integer"))
       "integer"
     end
   end
@@ -151,7 +149,7 @@ end
 
 i = Iterator.new
 i.newDatatype("integer")
-i.newFunction("+",["integer", "integer"], "integer")
+i.newFunctionIdentifier("+",["integer", "integer"], "integer")
 i.pushScope
 
 sl = [
@@ -165,3 +163,4 @@ sl = [
 
 sl.map{|s| s.parse(i)}
 i.stack
+
