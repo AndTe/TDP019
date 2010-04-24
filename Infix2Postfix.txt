@@ -3,7 +3,7 @@
 while(e) {
 	...
 }
- 
+
 start                            end
  |                                |
  v                                v
@@ -15,7 +15,10 @@ if(e) {
 	...
 }
 
-[e, :if_end, if, ...]
+                  end
+                   |
+                   v
+[e, :end, if, ...]
 
 if(e){
 	.1.
