@@ -7,7 +7,7 @@ class InfixParser
       token(/[ \t]+/)
       token(/[\r\n]+/) {:newline}
       token(/\<=/) {|m| m}
-      token(/\=>/) {|m| m}
+      token(/\>=/) {|m| m}
       token(/\==/) {|m| m}
       token(/\!=/) {|m| m}
       token(/</) {|m| m}
@@ -71,7 +71,7 @@ class InfixParser
 
       rule :comparison_expr do
         match(:comparison_expr,"<=", :plus_expr) {|l, op, r| wrap(l, op, r)}
-        match(:comparison_expr,"=>", :plus_expr) {|l, op, r| wrap(l, op, r)}
+        match(:comparison_expr,">=", :plus_expr) {|l, op, r| wrap(l, op, r)}
         match(:comparison_expr,"==", :plus_expr) {|l, op, r| wrap(l, op, r)}
         match(:comparison_expr,"!=", :plus_expr) {|l, op, r| wrap(l, op, r)}
         match(:comparison_expr,"<", :plus_expr) {|l, op, r| wrap(l, op, r)}
