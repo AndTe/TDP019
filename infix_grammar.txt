@@ -4,28 +4,28 @@
 
 <digit>				::=		0 | <nonzero_digit>
 
-<letter>			::=		“A”...”Ö” | “a”...”ö”
+<letter>			::=		"A"..."Ö" | "a"..."ö"
 
 <alpha_numeric_character>	::=		<digit> | <letter>
 
-<string>			::=		'“'<stringitem>*'”'
+<string>			::=		'"'<stringitem>*'"'
 
-<logical_value>			::=		“true” | “false”
+<logical_value>			::=		"true" | "false"
 
-<nil_value>			::=		“nil”
+<nil_value>			::=		"nil"
 
 <stringitem>			::=		<stringchar> | <escape_sequence>
 
 <stringchar>			::=		<any character except the quote>
 
-<escape_sequence>		::=		“\” <any ASCII character>
+<escape_sequence>		::=		"\" <any ASCII character>
 
-<integer>			::=		[“-”] <digit> | [“-”] <nonzero_digit><digit>+
+<integer>			::=		["-"] <digit> | ["-"] <nonzero_digit><digit>+
 
-<float>				::=		[“-”] 0”.”digit+ | [“-”] <non-zero digit><digit>*”.”<digit>+
+<float>				::=		["-"] 0"."digit+ | ["-"] <non-zero digit><digit>*"."<digit>+
 
-<array>				::=		“[“<arrayitem>(”,” <arrayitem of the same type as the first>)* “]”
-						| “[]”
+<array>				::=		"["<arrayitem>("," <arrayitem of the same type as the first>)* "]"
+						| "[]"
 
 <arrayitem>			::=		<variable> | <string> | <integer> | <float>
 
@@ -60,23 +60,23 @@
 						| <comparison_expr> ">" <plus_expr>
 
 <plus_expr>			::=		<multiply_expr>
-						| <plus_expr> “+” <multiply_expr>
-						| <plus_expr> “-” <multiply_expr>
+						| <plus_expr> "+" <multiply_expr>
+						| <plus_expr> "-" <multiply_expr>
 
 <multiply_expr>			::=		<expression_value>
-						| <multiply_expr> “*” <expression_value>
-						| <multiply_expr> “/” <expression_value>
+						| <multiply_expr> "*" <expression_value>
+						| <multiply_expr> "/" <expression_value>
 
 <expression_value>		::=		<float>
 						| <integer>
 						| "(" <expression> ")"
 						| <function_call>
 
-<variable_declaration>		::=		<datatype> <variable> “=” <expression> <stmt_end>
+<variable_declaration>		::=		<datatype> <variable> "=" <expression> <stmt_end>
 
-<variable_assignment>		::=		<variable> “=” <expression> <stmt_end>
+<variable_assignment>		::=		<variable> "=" <expression> <stmt_end>
 
-<stmt_end>			::=		“;”
+<stmt_end>			::=		";"
 
 <statement>			::=		<statement_list> | <compound_statement>
 
