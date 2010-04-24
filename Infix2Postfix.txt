@@ -1,0 +1,72 @@
+---------------
+
+while(e) {
+	...
+}
+
+start                            end
+ |                                |
+ v                                v
+[e, :end, if , ..., :start, goto]
+
+---------------
+
+if(e) {
+	...
+}
+
+                  end
+                   |
+                   v
+[e, :end, if, ...]
+
+if(e){
+	.1.
+} else {
+	.2.
+}
+
+                            else     end
+                               |     |
+                               v     v
+[e, :else, if, .1., :end, goto, .2.]
+
+alternativ till att använda else.
+[e, 0, duplicate, :if_end, if, .1., not, :if_end, if, .2.]
+---------------
+
+for(int i = 1, i < 20, i = i + 1)
+
+for(s1, e, s2) {
+	...
+}
+
+
+  start                                 end
+    |                                    |
+    v                                    v
+[s1, e, :end, if, ..., s2, :start, goto]
+
+---------------
+
+int fn(s1, s2) {
+  return e1;
+}
+
+[...]
+
+---------------
+
+return e;
+
+[:bottom_functionscope_adress, e, =, (pop local variables/scope), swap]
+
+---------------
+
+fn(e1, e2);
+                                end
+                                 |
+                                 v
+[:end, e1, e2, :fn_adress, goto]
+
+---------------

@@ -7,7 +7,7 @@ class InfixParser
       token(/[ \t]+/)
       token(/[\r\n]+/) {:newline}
       token(/\<=/) {|m| m}
-      token(/\=>/) {|m| m}
+      token(/\>=/) {|m| m}
       token(/\==/) {|m| m}
       token(/\!=/) {|m| m}
       token(/</) {|m| m}
@@ -26,18 +26,27 @@ class InfixParser
 
       rule :statement do
         match(:variable_declaration, :newline) {|a, b| a}
+        match(:assignment_statement, :newline) {|a, b| a}
       end
 
       rule :variable_declaration do
-        match(:datatypes, :assignment_expr) {|a, b| "[variable_declaration:#{a} #{b}]"}
+        match(:datatype, :variable, "=", :expression) {|t, v, _, e| "[variable_declaration #{t} #{v} #{e}]"}
+      end
+
+      rule :assignment_statement do
+        match(:assignment_expr) {|a| "[assignment #{a}]"}
       end
 
       rule :assignment_expr do
-        match(:identifier, "=", :expression){|l, op, r| wrap(l, op, r)}
+        match(:variable, "=", :expression){|l, op, r| wrap(l, op, r)}
       end
 
-      rule :datatypes do
-        match(:identifier) {|a| a}
+      rule :datatype do
+        match(:identifier) {|m| "(datatype:#{m})"}
+      end
+
+      rule :variable do
+        match(:identifier) {|m| "(variable:#{m})"}
       end
 
       rule :expression do
@@ -62,7 +71,7 @@ class InfixParser
 
       rule :comparison_expr do
         match(:comparison_expr,"<=", :plus_expr) {|l, op, r| wrap(l, op, r)}
-        match(:comparison_expr,"=>", :plus_expr) {|l, op, r| wrap(l, op, r)}
+        match(:comparison_expr,">=", :plus_expr) {|l, op, r| wrap(l, op, r)}
         match(:comparison_expr,"==", :plus_expr) {|l, op, r| wrap(l, op, r)}
         match(:comparison_expr,"!=", :plus_expr) {|l, op, r| wrap(l, op, r)}
         match(:comparison_expr,"<", :plus_expr) {|l, op, r| wrap(l, op, r)}
@@ -86,7 +95,7 @@ class InfixParser
         match(:assignment_expr) {|m| m}
         match("(", :expression, ")") {|_, m, _| "#{m}"}
         match(Fixnum)  {|m| m.to_s}
-        match(:identifier) {|m| m}
+        match(:variable) {|m| m}
       end
 
       rule :identifier do
