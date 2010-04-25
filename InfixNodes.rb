@@ -1,44 +1,33 @@
-class Operand
-  attr_accessor :datatype, :variableName
-  def initialize(datatype, variableName=nil)
-    @datatype = datatype
-    @variableName = variableName
-  end
-end
 
 # Iterates over the constraints network, validates the node constructions
 # and generates the postfix code
 class Iterator
-  attr_accessor :functions, :datatypes, :stack
+  attr_accessor :functions, :datatypes, :stack, :stacktop
   def initialize
     @functions = {}
     @datatypes = []
     @stack = []
+    @stacktop = 0
   end
 
   def pushScope
-    @stack.unshift([])
+    @stack.unshift({})
   end
 
   def popScope
     @stack.shift
   end
 
-  def pushOperand(item)
-    @stack.first.unshift(item)
+  def pushOperand
+    @stacktop += 1
   end
 
-  def popOperand
-    @stack.first.shift
+  def popOperands(elements=1)
+    @stacktop -= elements
   end
 
-  def bindTopToVariable(name)
-    @stack.first.each {|i|
-      if i.variableName == name
-        raise "Variable #{name} already defined in current scope"
-      end
-    }
-    @stack.first.first.variableName = name
+  def pushVariable(name, operand)
+    @stack.first[name] = [operand, @stacktop]
   end
 
   def newFunctionIdentifier(name, args, outdatatype)
@@ -61,18 +50,12 @@ class Iterator
   end
 
   def getVariable(name)
-    index = nil
-    flat = stack.flatten
-    flat.each_index {|i|
-      if flat[i].variableName == name
-        index = i
-      end
-    }
-    if not index
-      nil
-    else
-      [flat[index], index]
+    rl = @stack.select{|h| h.has_key?(name)}
+    if rl.empty?
+      return [nil, nil]
     end
+    datatype, i = rl.first[name]
+    [datatype, @stacktop - i]
   end
 end
 
@@ -94,8 +77,7 @@ module Node
       if not iter.validateDatatype(@datatype)
         raise "Undefined datatype: #{@datatype}"
       end
-      iter.bindTopToVariable(@variable)
-      true
+      iter.pushVariable(@variable, e)
     end
   end
 
@@ -106,15 +88,13 @@ module Node
     end
 
     def parse(iter)
-      rhdatatype = @rh.parse(iter)
-      lhdatatype = @lh.parse(iter)
+      rhdatatype = @lh.parse(iter)
+      lhdatatype = @rh.parse(iter)
       returndatatype = iter.findFunctionIdentifier("+", [rhdatatype, lhdatatype])
       if not returndatatype
         raise "Undefined function: +(#{rhdatatype}, #{lhdatatype})"
       end
-      iter.popOperand
-      iter.popOperand
-      iter.pushOperand(Operand.new(returndatatype))
+      iter.popOperands(1)
       returndatatype
     end
   end
@@ -125,13 +105,13 @@ module Node
     end
 
     def parse(iter)
-      item, index = iter.getVariable(@name)
+      datatype, index = iter.getVariable(@name)
 
-      if not item
+      if not datatype
         raise "Undefined variable: #{@name}"
       end
-      iter.pushOperand(Operand.new(item.datatype))
-      item.datatype
+      iter.pushOperand
+      datatype
     end
   end
 
@@ -141,7 +121,7 @@ module Node
     end
 
     def parse(iter)
-      iter.pushOperand(Operand.new("integer"))
+      iter.pushOperand
       "integer"
     end
   end
@@ -151,6 +131,7 @@ i = Iterator.new
 i.newDatatype("integer")
 i.newFunctionIdentifier("+",["integer", "integer"], "integer")
 i.pushScope
+i.pushVariable(:return, "integer")
 
 sl = [
       Node::VariableDeclaration.new("integer", "a", Node::Integer.new(1)),
@@ -163,4 +144,3 @@ sl = [
 
 sl.map{|s| s.parse(i)}
 i.stack
-
