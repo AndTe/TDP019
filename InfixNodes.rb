@@ -86,16 +86,17 @@ module Node
     end
 
     def parse(iter)
-      e = @expression.parse(iter)
-      if @datatype != e
-        raise "Incompatable datatypes: #{@datatype} and #{e}"
+      @expression.parse(iter)
+      e = iter.popOperand
+      if @datatype != e.datatype
+        raise "Incompatable datatypes: #{@datatype} and #{e.datatype}"
       end
 
       if not iter.validateDatatype(@datatype)
         raise "Undefined datatype: #{@datatype}"
       end
+      iter.pushOperand(e)
       iter.bindTopToVariable(@variable)
-      true
     end
   end
 
@@ -106,16 +107,16 @@ module Node
     end
 
     def parse(iter)
-      rhdatatype = @rh.parse(iter)
-      lhdatatype = @lh.parse(iter)
+      @rh.parse(iter)
+      @lh.parse(iter)
+
+      lhdatatype = iter.popOperand.datatype
+      rhdatatype = iter.popOperand.datatype
       returndatatype = iter.findFunctionIdentifier("+", [rhdatatype, lhdatatype])
       if not returndatatype
         raise "Undefined function: +(#{rhdatatype}, #{lhdatatype})"
       end
-      iter.popOperand
-      iter.popOperand
       iter.pushOperand(Operand.new(returndatatype))
-      returndatatype
     end
   end
 
@@ -131,7 +132,6 @@ module Node
         raise "Undefined variable: #{@name}"
       end
       iter.pushOperand(Operand.new(item.datatype))
-      item.datatype
     end
   end
 
@@ -142,7 +142,6 @@ module Node
 
     def parse(iter)
       iter.pushOperand(Operand.new("integer"))
-      "integer"
     end
   end
 end
@@ -151,6 +150,7 @@ i = Iterator.new
 i.newDatatype("integer")
 i.newFunctionIdentifier("+",["integer", "integer"], "integer")
 i.pushScope
+i.pushOperand(Operand.new("integer", :return))
 
 sl = [
       Node::VariableDeclaration.new("integer", "a", Node::Integer.new(1)),
