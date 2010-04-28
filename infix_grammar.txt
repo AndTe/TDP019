@@ -1,0 +1,121 @@
+<program>			::=		[<variable_declaration> <function_declaration>]*
+
+<nonzero_digit>			::=		1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
+
+<digit>				::=		0 | <nonzero_digit>
+
+<letter>			::=		"A"..."Ö" | "a"..."ö"
+
+<alpha_numeric_character>	::=		<digit> | <letter>
+
+<string>			::=		'"'<stringitem>*'"'
+
+<logical_value>			::=		"true" | "false"
+
+<stringitem>			::=		<stringchar> | <escape_sequence>
+
+<stringchar>			::=		<any character except the quote>
+
+<escape_sequence>		::=		"\" <any ASCII character>
+
+<integer>			::=		["-"] <digit> | ["-"] <nonzero_digit><digit>+
+
+<float>				::=		["-"] 0"."digit+ | ["-"] <non-zero digit><digit>*"."<digit>+
+
+<array>				::=		"["<arrayitem>("," <arrayitem of the same type as the first>)* "]"
+						| "[]"
+
+<arrayitem>			::=		<variable> | <string> | <integer> | <float>
+
+<identifier>			::=		<letter>+ <alpha_numeric_character>*
+
+<datatype>			::=		<identifier>
+
+<variable>			::=		<identifier>
+
+<global_variable>		::=		<variable>
+
+<expression_list>		::=		<expression>
+						| <expression> ("," <expression>)+
+
+<expression>			::=		<or_expr>
+
+<or_expr>			::=		<or_expr> "or" <and_expr>
+						| <and_expr>
+
+<and_expr>			::=		<and_expr> "and" <not_expr>
+						| <not_expr>
+
+<not_expr>			::=		"not" <not_expr>
+						| <comparison_expr>
+
+<comparison_expr>		::=		<plus_expr>
+						| <comparison_expr> "<=" <plus_expr>
+						| <comparison_expr> ">=" <plus_expr>
+						| <comparison_expr> "==" <plus_expr>
+						| <comparison_expr> "!=" <plus_expr>
+						| <comparison_expr> "<" <plus_expr>
+						| <comparison_expr> ">" <plus_expr>
+
+<plus_expr>			::=		<multiply_expr>
+						| <plus_expr> "+" <multiply_expr>
+						| <plus_expr> "-" <multiply_expr>
+
+<multiply_expr>			::=		<expression_value>
+						| <multiply_expr> "*" <expression_value>
+						| <multiply_expr> "/" <expression_value>
+
+<expression_value>		::=		<float>
+						| <integer>
+						| "(" <expression> ")"
+						| <function_call>
+
+<variable_declaration>		::=		<datatype> <variable> "=" <expression> <stmt_end>
+
+<variable_assignment>		::=		<variable> "=" <expression> <stmt_end>
+
+<stmt_end>			::=		";"
+
+<statement>			::=		<simple_statement> | <compound_statement> | <block> | <stmt_end>
+
+<statement_list>		::=		<statement>*
+
+<simple_statement>		::=		<variable_declaration>
+						| <return_stmt>
+						| <variable_assignment>
+
+<compound_statment>		::=		<for_stmt>
+						| <while_stmt>
+						| <if_stmt>
+
+<function_identifier>		::=		<identifier>
+
+<function_declaration>		::=		<datatype> <function_identifier> "(" <argument_list> ")" <block>
+
+<argument>			::=		<datatype> <variable>
+
+<argument_list>			::=		<argument>? | <argument> ("," <argument>)+
+
+<function_call>			::=		<function_identifier> "(" <expression_list> ")"
+
+<for_stmt>			::=		"for" "(" <statement>? ";" <expression> ";" <statement>? ")" <statement>
+
+<while_stmt>			::=		"while" "(" <expression> ")" <statement>
+
+<if_stmt>			::=		"if" "(" <expression> ")" <statement> <else-stmt>?
+
+<else_stmt>			::=		"else" <statement>
+
+<return_stmt>			::=		"return" <expression> <stmt_end>
+
+<break_stmt>			::=		"break" <stmt_end>
+
+<continue_stmt>			::=		"continue" <stmt_end>
+
+<block>				::=		"{" <statement_list> "}"
+
+<class_identifier>		::=		<identifier>
+
+<class_declaration>		::=		"class" <class_identifier> "{" <class_block> "}" <stmt_end>
+
+<class_block>			::=
