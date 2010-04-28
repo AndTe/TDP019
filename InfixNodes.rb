@@ -76,6 +76,44 @@ class Iterator
   end
 end
 
+def labelAdressing(preprogram)
+  labels = {}
+  adresses = {}
+  preprogram.each_index{|i|
+    if preprogram[i].class == Label
+      labels[preprogram.delete_at(i).id] = i
+    elsif preprogram[i].class == Adress
+      if adresses.has_key?(preprogram[i].id)
+        adresses[preprogram[i].id] << i
+      else
+        adresses[preprogram[i].id] = [i]
+      end
+    end
+  }
+
+  adresses.each_pair{|key, value|
+    value.each{|i|
+      preprogram[i]= labels[key]
+    }
+  }
+
+  preprogram.join(" ")
+end
+
+class Label
+  attr_accessor :id
+  def initialize(id)
+    @id = id
+  end
+end
+
+class Adress
+  attr_accessor :id
+  def initialize(id)
+    @id = id
+  end
+end
+
 # Namespace for constraints network nodes to avoid conflicts
 module Node
   class VariableDeclaration
@@ -86,7 +124,7 @@ module Node
     end
 
     def parse(iter)
-      @expression.parse(iter)
+      ep = @expression.parse(iter)
       e = iter.popOperand
       if @datatype != e.datatype
         raise "Incompatable datatypes: #{@datatype} and #{e.datatype}"
@@ -97,26 +135,30 @@ module Node
       end
       iter.pushOperand(e)
       iter.bindTopToVariable(@variable)
+      ep
     end
   end
 
-  class Plus
-    def initialize(lh, rh)
+  class Arithmetic
+    def initialize(lh, rh, operator)
       @lh = lh
       @rh = rh
+      @operator = operator
     end
 
     def parse(iter)
-      @rh.parse(iter)
-      @lh.parse(iter)
+      lh = @lh.parse(iter)
+      rh = @rh.parse(iter)
 
-      lhdatatype = iter.popOperand.datatype
       rhdatatype = iter.popOperand.datatype
-      returndatatype = iter.findFunctionIdentifier("+", [rhdatatype, lhdatatype])
+      lhdatatype = iter.popOperand.datatype
+
+      returndatatype = iter.findFunctionIdentifier(@operator, [rhdatatype, lhdatatype])
       if not returndatatype
-        raise "Undefined function: +(#{rhdatatype}, #{lhdatatype})"
+        raise "Undefined function: #{@operator}(#{rhdatatype}, #{lhdatatype})"
       end
       iter.pushOperand(Operand.new(returndatatype))
+      [lh, rh, @operator]
     end
   end
 
@@ -127,11 +169,12 @@ module Node
 
     def parse(iter)
       item, index = iter.getVariable(@name)
-
       if not item
         raise "Undefined variable: #{@name}"
       end
       iter.pushOperand(Operand.new(item.datatype))
+
+      [index, "duplicate"]
     end
   end
 
@@ -142,6 +185,7 @@ module Node
 
     def parse(iter)
       iter.pushOperand(Operand.new("integer"))
+      @value
     end
   end
 end
@@ -149,18 +193,30 @@ end
 i = Iterator.new
 i.newDatatype("integer")
 i.newFunctionIdentifier("+",["integer", "integer"], "integer")
+i.newFunctionIdentifier("-",["integer", "integer"], "integer")
+i.newFunctionIdentifier("*",["integer", "integer"], "integer")
+i.newFunctionIdentifier("/",["integer", "integer"], "integer")
+
 i.pushScope
-i.pushOperand(Operand.new("integer", :return))
+#i.pushOperand(Operand.new("integer", :return))
 
 sl = [
+      Node::VariableDeclaration.new("integer", "f", Node::Integer.new(1)),
       Node::VariableDeclaration.new("integer", "a", Node::Integer.new(1)),
       Node::VariableDeclaration.new("integer", "c",
-                                    Node::Plus.new(Node::Plus.new(Node::Integer.new(1),
-                                                                  Node::Integer.new(2)),
-                                                   Node::PushVariable.new("a")))
+                                    Node::Arithmetic.new(Node::Arithmetic.new(Node::Integer.new(1),
+                                                                              Node::Integer.new(2),
+                                                                              "*"),
+                                                         Node::PushVariable.new("a"),
+                                                         "+"))
      ]
 
 
-sl.map{|s| s.parse(i)}
+program = sl.map{|s| s.parse(i)}
 i.stack
+program.flatten
 
+
+
+a= [0,1,2,3, Label.new("hej"),4,5,Label.new("hej2"),6,8,Adress.new("hej"), :goto, Adress.new("hej2")]
+labelAdressing(a)
