@@ -12,8 +12,6 @@
 
 <logical_value>			::=		"true" | "false"
 
-<nil_value>			::=		"nil"
-
 <stringitem>			::=		<stringchar> | <escape_sequence>
 
 <stringchar>			::=		<any character except the quote>
@@ -78,23 +76,21 @@
 
 <stmt_end>			::=		";"
 
-<statement>			::=		<statement_list> | <compound_statement>
+<statement>			::=		<simple_statement> | <compound_statement> | <block> | <stmt_end>
 
-<statement_list>		::=		<simple_statement>*
+<statement_list>		::=		<statement>*
 
 <simple_statement>		::=		<variable_declaration>
 						| <return_stmt>
 						| <variable_assignment>
 
-<compound_statment>		::=		<class declaration>
-						| <function_declaration>
-						| <for_stmt>
+<compound_statment>		::=		<for_stmt>
 						| <while_stmt>
 						| <if_stmt>
 
 <function_identifier>		::=		<identifier>
 
-<function_declaration>		::=		<datatype> <function_identifier> "(" <argument_list> ")" <scope>
+<function_declaration>		::=		<datatype> <function_identifier> "(" <argument_list> ")" <block>
 
 <argument>			::=		<datatype> <variable>
 
@@ -102,14 +98,24 @@
 
 <function_call>			::=		<function_identifier> "(" <expression_list> ")"
 
-<for_stmt>			::=		"for" "(" <statement>? ";" <expression> ";" <statement>? ")" <scope>
+<for_stmt>			::=		"for" "(" <statement>? ";" <expression> ";" <statement>? ")" <statement>
 
-<while_stmt>			::=		"while" "(" <expression> ")" <scope>
+<while_stmt>			::=		"while" "(" <expression> ")" <statement>
 
-<if_stmt>			::=		"if" "(" <expression> ")" <scope> <else-stmt>?
+<if_stmt>			::=		"if" "(" <expression> ")" <statement> <else-stmt>?
 
-<else_stmt>			::=		"else" <scope>
+<else_stmt>			::=		"else" <statement>
 
 <return_stmt>			::=		"return" <expression> <stmt_end>
 
-<scope>				::=		"{" statement* "}"
+<break_stmt>			::=		"break" <stmt_end>
+
+<continue_stmt>			::=		"continue" <stmt_end>
+
+<block>				::=		"{" <statement_list> "}"
+
+<class_identifier>		::=		<identifier>
+
+<class_declaration>		::=		"class" <class_identifier> "{" <class_block> "}" <stmt_end>
+
+<class_block>			::=
