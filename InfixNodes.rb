@@ -81,6 +81,10 @@ class Iterator
       [flat[index], index]
     end
   end
+
+  def getStackDepth
+    @stack.flatten.size
+  end
 end
 
 def labelAdressing(preprogram)
@@ -128,6 +132,16 @@ end
 
 # Namespace for constraints network nodes to avoid conflicts
 module Node
+  class Program
+    def initialize(globals)
+      @globals = globals
+    end
+
+    def parse(iter)
+
+    end
+  end
+
   class VariableDeclaration
     def initialize(datatype, variable, expression)
       @datatype = datatype
@@ -173,7 +187,6 @@ module Node
 
       @argumentlist.map{|arg|
         iter.pushOperand Operand.new(arg[0], arg[1])
-        #iter.bindTopToVariable(arg[1])
       }
       programreturn = @block.parse(iter)
 
@@ -209,6 +222,29 @@ module Node
     end
   end
 
+  class Return
+    def initialize(expression)
+      @expression = expression
+    end
+
+    def parse(iter)
+      depth = iter.getStackDepth
+      if depth < 2
+        programreturn = @expression.parse(iter)
+        programreturn << "swap" << "goto"
+      else
+        operand, rindex = iter.getVariable(:return)
+        rindex -= 1
+        programreturn = [rindex]
+        programreturn << @expression.parse(iter)
+        programreturn << "="
+        programreturn += ["pop"] * (depth - 2)
+        programreturn << "swap" << "goto"
+      end
+
+      programreturn
+    end
+  end
 
   class Arithmetic
     def initialize(lh, rh, operator)
