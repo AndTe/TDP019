@@ -21,10 +21,17 @@ class Iterator
   end
 
   def popScope
-    @stack.shift
+    @stack.shift.size
   end
 
   def pushOperand(item)
+    if item.class != Operand
+      raise "Can't push #{item.class}, must be an Operand"
+    end
+
+    if not validDatatype(item.datatype)
+      raise "Datatype #{item} not defined"
+    end
     @stack.first.unshift(item)
   end
 
@@ -52,7 +59,7 @@ class Iterator
     @datatypes << name
   end
 
-  def validateDatatype(name)
+  def validDatatype(name)
     @datatypes.include?(name)
   end
 
@@ -77,11 +84,15 @@ class Iterator
 end
 
 def labelAdressing(preprogram)
+  preprogram.flatten!
   labels = {}
   adresses = {}
-  preprogram.each_index{|i|
+
+  i = 0
+  while(i < preprogram.size)
     if preprogram[i].class == Label
       labels[preprogram.delete_at(i).id] = i
+      next
     elsif preprogram[i].class == Adress
       if adresses.has_key?(preprogram[i].id)
         adresses[preprogram[i].id] << i
@@ -89,7 +100,8 @@ def labelAdressing(preprogram)
         adresses[preprogram[i].id] = [i]
       end
     end
-  }
+    i += 1
+  end
 
   adresses.each_pair{|key, value|
     value.each{|i|
@@ -130,7 +142,7 @@ module Node
         raise "Incompatable datatypes: #{@datatype} and #{e.datatype}"
       end
 
-      if not iter.validateDatatype(@datatype)
+      if not iter.validDatatype(@datatype)
         raise "Undefined datatype: #{@datatype}"
       end
       iter.pushOperand(e)
@@ -138,6 +150,65 @@ module Node
       ep
     end
   end
+
+  class FunctionDeclaration
+    def initialize(id, returntype, argumentlist, block)
+      @id = id
+      @returntype = returntype
+      @argumentlist = argumentlist
+      @block = block
+    end
+
+    def parse(iter)
+      typelist = @argumentlist.map{|arg| arg[0]}
+      typeliststring = typelist.join(" ")
+
+      if @if != "main"
+        label = Label.new("#{@id}(#{typeliststring}) #{@returntype}")
+      else
+        label = Label.new(:main)
+      end
+      iter.pushScope
+      iter.pushOperand Operand.new("integer", :return)
+
+      @argumentlist.map{|arg|
+        iter.pushOperand Operand.new(arg[0], arg[1])
+        #iter.bindTopToVariable(arg[1])
+      }
+      programreturn = @block.parse(iter)
+
+      iter.popScope
+      iter.newFunctionIdentifier(@id, typelist, @returntype)
+      [label, programreturn]
+    end
+  end
+
+  class Block
+    def initialize(statementlist)
+      @statementlist = statementlist
+    end
+
+    def parse(iter)
+      iter.pushScope
+      programreturn = @statementlist.parse(iter)
+
+      popsize = iter.popScope
+
+      programreturn + ["pop"] * popsize
+    end
+
+  end
+
+  class StatementList
+    def initialize(list)
+      @list = list
+    end
+
+    def parse(iter)
+      @list.map{|s| s.parse(iter)}
+    end
+  end
+
 
   class Arithmetic
     def initialize(lh, rh, operator)
@@ -159,6 +230,41 @@ module Node
       end
       iter.pushOperand(Operand.new(returndatatype))
       [lh, rh, @operator]
+    end
+  end
+
+  class FunctionCall
+    def initialize(id, nodelist)
+      @id = id
+      @nodelist = nodelist
+    end
+
+    def parse(iter)
+      programlist = @nodelist.map{|n|
+        n.parse(iter)
+      }
+
+      numargs = programlist.size
+      operandlist = []
+      1.upto(numargs) {
+        operandlist << iter.popOperand
+      }
+      datatypelist = operandlist.reverse.map{|o|
+        o.datatype
+      }
+
+      returntype = iter.findFunctionIdentifier(@id, datatypelist)
+
+      datatypeliststring = datatypelist.join(" ")
+
+      adress = Adress.new("#{@id}(#{datatypeliststring}) #{returntype}")
+
+      returnlabel = Label.new(adress)
+
+
+      returnadress = Adress.new(adress)
+      iter.pushOperand Operand.new(returntype)
+      [returnadress, programlist, adress, "goto", returnlabel]
     end
   end
 
@@ -189,34 +295,3 @@ module Node
     end
   end
 end
-
-i = Iterator.new
-i.newDatatype("integer")
-i.newFunctionIdentifier("+",["integer", "integer"], "integer")
-i.newFunctionIdentifier("-",["integer", "integer"], "integer")
-i.newFunctionIdentifier("*",["integer", "integer"], "integer")
-i.newFunctionIdentifier("/",["integer", "integer"], "integer")
-
-i.pushScope
-#i.pushOperand(Operand.new("integer", :return))
-
-sl = [
-      Node::VariableDeclaration.new("integer", "f", Node::Integer.new(1)),
-      Node::VariableDeclaration.new("integer", "a", Node::Integer.new(1)),
-      Node::VariableDeclaration.new("integer", "c",
-                                    Node::Arithmetic.new(Node::Arithmetic.new(Node::Integer.new(1),
-                                                                              Node::Integer.new(2),
-                                                                              "*"),
-                                                         Node::PushVariable.new("a"),
-                                                         "+"))
-     ]
-
-
-program = sl.map{|s| s.parse(i)}
-i.stack
-program.flatten
-
-
-
-a= [0,1,2,3, Label.new("hej"),4,5,Label.new("hej2"),6,8,Adress.new("hej"), :goto, Adress.new("hej2")]
-labelAdressing(a)
