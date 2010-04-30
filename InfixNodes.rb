@@ -14,6 +14,10 @@ class Iterator
     @functions = {}
     @datatypes = []
     @stack = []
+    @globalvariables = []
+    @uniqueid = 0
+    @continues = []
+    @breaks = []
   end
 
   def pushScope
@@ -46,6 +50,10 @@ class Iterator
       end
     }
     @stack.first.first.variableName = name
+  end
+
+  def pushGlobal(item)
+    @globalvariables << item
   end
 
   def newFunctionIdentifier(name, args, outdatatype)
@@ -82,10 +90,56 @@ class Iterator
     end
   end
 
+  def getGlobalVariable(name)
+    index = nil
+    @globalvariables.each_index {|i|
+      if @globalvariables[i].variableName == name
+        index = i
+      end
+    }
+    if not index
+      nil
+    else
+      [@globalvariables[index], index]
+    end
+  end
+
   def getStackDepth
     @stack.flatten.size
   end
+
+  def pushContinueAdress(adress)
+    @continues << [getStackDepth, adress]
+  end
+
+  def pushBreakAdress(adress)
+    @breaks << [getStackDepth, adress]
+  end
+
+  def popStackedAdresses
+    @continues.pop
+    @breaks.pop
+  end
+
+  def topContinueAdress
+    @continues.last
+  end
+
+  def topBreakAdress
+    @breaks.last
+  end
+
+  def getUniqueId
+    @uniqueid += 1
+  end
+
+  def getGotoIds
+    id = getUniqueId
+    [Label.new(id), Adress.new(id)]
+  end
 end
+
+
 
 def labelAdressing(preprogram)
   preprogram.flatten!
@@ -138,15 +192,16 @@ module Node
     end
 
     def parse(iter)
-
+      @globals.map{|s| s.parse(iter)}
     end
   end
 
   class VariableDeclaration
-    def initialize(datatype, variable, expression)
+    def initialize(datatype, variable, expression, local)
       @datatype = datatype
       @variable = variable
       @expression = expression
+      @local = local
     end
 
     def parse(iter)
@@ -159,8 +214,12 @@ module Node
       if not iter.validDatatype(@datatype)
         raise "Undefined datatype: #{@datatype}"
       end
-      iter.pushOperand(e)
-      iter.bindTopToVariable(@variable)
+      if @local
+        iter.pushOperand(e)
+        iter.bindTopToVariable(@variable)
+      else
+        iter.pushGlobal(e)
+      end
       ep
     end
   end
@@ -222,6 +281,108 @@ module Node
     end
   end
 
+  class IfStatment
+    def initialize(expression, truebranch, falsebranch=nil)
+      @expression = expression
+      @truebranch = truebranch
+      @falsebranch = falsebranch
+    end
+
+    def parse(iter)
+      falseLabel, falseAdress = iter.getGotoIds
+      endLabel, endAdress = iter.getGotoIds
+
+      programreturn = [falseAdress]
+      programreturn << @expression.parse(iter)
+      programreturn << "if"
+      programreturn << @truebranch.parse(iter)
+      programreturn << endAdress
+      programreturn << "goto"
+      programreturn << falseLabel
+      if @falsebranch
+        programreturn << @falsebranch.parse(iter)
+      end
+      programreturn << endLabel
+      programreturn
+    end
+  end
+
+  class WhileStatement
+    def initialize(expression, statement)
+      @expression = expression
+      @statement = statement
+    end
+
+    def parse(iter)
+      startLabel, startAdress = iter.getGotoIds
+      endLabel, endAdress = iter.getGotoIds
+
+      iter.addContinueAdress(startAdress)
+      iter.addBreakAdress(endAdress)
+
+      programreturn = [startLabel]
+      programreturn << endAdress
+      programreturn << @expression.parse(iter)
+      programreturn << "if"
+      programreturn << @startLabel
+      programreturn << @statement.parse(iter)
+      programreturn << startAdress
+      programreturn << "goto"
+      programreturn << endLabel
+      programreturn
+      iter.popStackedAdresses
+    end
+  end
+
+  class ForStatement
+    def initialize(declaration=nil, continueexpr=nil, iterationexpr=nil, statement)
+      @declaration = declaration
+      @continueexpr = continueexpr
+      @iterationexpr = iterationexpr
+      @statement = statement
+    end
+
+    def parse(iter)
+      startLabel, startAdress = iter.getGotoIds
+      endLabel, endAdress = iter.getGotoIds
+      continueLabel, continueAdress = iter.getGotoIds
+      breakLabel, breakAdress = iter.getGotoIds
+
+      iter.addBreakAdress(breakAdress)
+
+      programreturn = []
+      iter.pushScope
+      if @declaration
+        programreturn << @declaration.parse(iter)
+      end
+
+      iter.addContinueAdress(continueAdress)
+
+      programreturn << startLabel
+      programreturn << endAdress
+      if @continueexpr
+        programreturn << @continueexpr.parse(iter)
+      else
+        programreturn << "true"
+      end
+      programreturn << "if"
+      programreturn << @statement.parse(iter)
+
+      programreturn << continueLabel
+      if @iterationexpr
+        programreturn << @iterationexpr.parse(iter)
+      end
+      programreturn << startAdress
+      programreturn << "goto"
+      popdepth = iter.popScope
+
+      programreturn << popdepth
+      programreturn << "pop"
+      programreturn << breakLabel
+      iter.popStackedAdresses
+    end
+  end
+
   class Return
     def initialize(expression)
       @expression = expression
@@ -237,14 +398,34 @@ module Node
         rindex -= 1
         programreturn = ["stacktop", rindex, "-"]
         programreturn << @expression.parse(iter)
-                      << "assign_to_reference"
-                      << (depth - 2)
-                      << "pop"
-                      << "swap"
-                      << "goto"
+        programreturn << "assign_to_reference"
+        programreturn << (depth - 2)
+        programreturn << "pop"
+        programreturn << "swap"
+        programreturn << "goto"
       end
 
       programreturn
+    end
+  end
+
+  class Continue
+    def initialize()
+    end
+
+    def parse(iter)
+      previousDepth, adress = iter.topContinueAdress
+      [iter.getStackDepth - previousDepth, adress, "goto"]
+    end
+  end
+
+  class Break
+    def initialize()
+    end
+
+    def parse(iter)
+      previousDepth, adress = iter.topBreakAdress
+      [iter.getStackDepth - previousDepth, adress, "goto"]
     end
   end
 
@@ -313,12 +494,20 @@ module Node
 
     def parse(iter)
       item, index = iter.getVariable(@name)
-      if not item
-        raise "Undefined variable: #{@name}"
-      end
-      iter.pushOperand(Operand.new(item.datatype))
 
-      ["stacktop", index, "-", "reference_value"]
+      if item
+        iter.pushOperand(Operand.new(item.datatype))
+        ["stacktop", index, "-", "reference_value"]
+      else
+        item, index = iter.getGlobalVariable(@name)
+
+        if item
+          iter.pushOperand(Operand.new(item.datatype))
+          [index, "reference_value"]
+        else
+          raise "Undefined variable: #{@name}"
+        end
+      end
     end
   end
 
