@@ -32,7 +32,7 @@ if(e){
 [e, :else, if, .1., :end, goto, .2.]
 
 alternativ till att använda else.
-[e, 0, duplicate, :if_end, if, .1., not, :if_end, if, .2.]
+[e, stacktop, reference_value, :if_end, if, .1., not, :if_end, if, .2.]
 ---------------
 
 for(int i = 1, i < 20, i = i + 1)

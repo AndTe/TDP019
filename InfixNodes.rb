@@ -235,9 +235,9 @@ module Node
       else
         operand, rindex = iter.getVariable(:return)
         rindex -= 1
-        programreturn = [rindex]
+        programreturn = ["stacktop", rindex, "-"]
         programreturn << @expression.parse(iter)
-        programreturn << "="
+        programreturn << "assign_to_reference"
         programreturn += ["pop"] * (depth - 2)
         programreturn << "swap" << "goto"
       end
@@ -316,7 +316,7 @@ module Node
       end
       iter.pushOperand(Operand.new(item.datatype))
 
-      [index, "duplicate"]
+      ["stacktop", index, "-", "reference_value"]
     end
   end
 
