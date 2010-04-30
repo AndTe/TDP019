@@ -50,7 +50,7 @@ class Stack < Hash
     self
   end
 
-  def pop
+  def popStack
     value = self.delete(@stackindex)
     @stackindex -= 1
     value
@@ -60,44 +60,52 @@ class Stack < Hash
     self << @stackindex
   end
 
+  def pop
+    value = popStack
+    while (value > 0)
+      popStack
+      value -= 1
+    end
+  end
+
   def plus
-    right, left = pop, pop
+    right, left = popStack, popStack
     self << (left + right)
   end
 
   def minus
-    right, left = pop, pop
+    right, left = popStack, popStack
     self << (left - right)
   end
 
   def multiply
-    right, left = pop, pop
+    right, left = popStack, popStack
     self << (left * right)
   end
 
   def divide
-    right, left = pop, pop
+    right, left = popStack, popStack
     self << (left / right)
   end
 
   def less
-    right, left = pop, pop
+    right, left = popStack, popStack
     self << (left < right)
   end
 
   def equals
 	  p @programindex
-    right, left = pop, pop
+    right, left = popStack, popStack
     self << (left == right)
   end
 
   def goto
-     address = pop
+     address = popStack
      @programindex = address
   end
 
   def if
-    truthvalue, address = pop, pop
+    truthvalue, address = popStack, popStack
     if not truthvalue then
       self << address
       goto
@@ -105,12 +113,12 @@ class Stack < Hash
   end
 
   def print
-    value = pop
+    value = popStack
     puts value
   end
 
   def swap
-    value1, value2 = pop, pop
+    value1, value2 = popStack, popStack
     self << value1 << value2
   end
 
@@ -129,38 +137,38 @@ class Stack < Hash
 
   # references
   def reference
-    blocksize = pop
+    blocksize = popStack
     self << reference_block(blocksize)
   end
 
   def assign_to_reference
-    value, ref = pop, pop
+    value, ref = popStack, popStack
     self[ref] = value
   end
 
   def reference_value
-    ref = pop
+    ref = popStack
     self << self[ref]
   end
 
   def delete_reference
-    ref = pop
+    ref = popStack
     self.delete(ref)
   end
 
   # boolean operators
   def and
-    value1, value2 = pop, pop
+    value1, value2 = popStack, popStack
     self << (value2 and value1)
   end
 
   def or
-    value1, value2 = pop, pop
+    value1, value2 = popStack, popStack
     self << (value2 or value1)
   end
 
   def not
-    value = pop
+    value = popStack
     self << (not value)
   end
 

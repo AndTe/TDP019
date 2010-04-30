@@ -119,9 +119,14 @@ class Test_Stack < Test::Unit::TestCase
 
   def test_pop
     @engine.reset
-    program = PostfixParseString("1 3 pop 2 4 pop 3 4 exit")
+    program = PostfixParseString("1 3 1 pop 2 4 1 pop 3 4 exit")
     @engine.eat(program)
     assert_equal({1=>1, 2=>2, 3=>3, 4=>4}, @engine)
+
+    @engine.reset
+    program = PostfixParseString("0 1 2 3 4 4 pop exit")
+    @engine.eat(program)
+    assert_equal({1=>0}, @engine)
   end
 
   def test_reference

@@ -207,7 +207,7 @@ module Node
 
       popsize = iter.popScope
 
-      programreturn + ["pop"] * popsize
+      programreturn + [popsize, "pop"]
     end
 
   end
@@ -237,9 +237,11 @@ module Node
         rindex -= 1
         programreturn = ["stacktop", rindex, "-"]
         programreturn << @expression.parse(iter)
-        programreturn << "assign_to_reference"
-        programreturn += ["pop"] * (depth - 2)
-        programreturn << "swap" << "goto"
+                      << "assign_to_reference"
+                      << (depth - 2)
+                      << "pop"
+                      << "swap"
+                      << "goto"
       end
 
       programreturn
