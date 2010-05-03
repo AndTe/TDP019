@@ -453,10 +453,9 @@ module Node
   end
 
   class LessEquals
-    def initialize(lh, rh, operator)
+    def initialize(lh, rh)
       @lh = lh
       @rh = rh
-      @operator = operator
     end
 
     def parse(iter)
@@ -466,9 +465,9 @@ module Node
       rhdatatype = iter.popOperand.datatype
       lhdatatype = iter.popOperand.datatype
 
-      returndatatype = iter.findFunctionIdentifier(@operator, [rhdatatype, lhdatatype])
+      returndatatype = iter.findFunctionIdentifier("xor", [rhdatatype, lhdatatype])
       if not returndatatype
-        raise "Undefined function: #{@operator}(#{rhdatatype}, #{lhdatatype})"
+        raise "Undefined function: xor(#{rhdatatype}, #{lhdatatype})"
       end
       iter.pushOperand(Operand.new(returndatatype))
       [rh, lh, "<", "not"]
@@ -494,10 +493,9 @@ module Node
   end
 
   class LogicalXor
-    def initialize(lh, rh, operator)
+    def initialize(lh, rh)
       @lh = lh
       @rh = rh
-      @operator = operator
     end
 
     def parse(iter)
