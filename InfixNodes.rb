@@ -192,7 +192,7 @@ module Node
     end
 
     def parse(iter)
-      @globals.map{|s| s.parse(iter)}
+      [Adress(:main), "goto", @globals.map{|s| s.parse(iter)}]
     end
   end
 
