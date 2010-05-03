@@ -565,7 +565,7 @@ module Node
 
       if item
         iter.pushOperand(Operand.new(item.datatype))
-        ["stacktop", index, "-", "reference_value"]
+        ["stacktop", index + 1, "-", "reference_value"]
       else
         item, index = iter.getGlobalVariable(@name)
 

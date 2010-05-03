@@ -17,7 +17,7 @@ class InfixParser
 
       token(/</) {|m| m}
       token(/>/) {|m| m}
-      token(/\w+/) {|m| puts m; m}
+      token(/\w+/) {|m| m}
 
 
       start :program do
