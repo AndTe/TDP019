@@ -34,7 +34,7 @@ class Iterator
     end
 
     if not validDatatype(item.datatype)
-      raise "Datatype #{item} not defined"
+      raise "Datatype #{item.datatype} not defined"
     end
     @stack.first.unshift(item)
   end
@@ -192,7 +192,7 @@ module Node
     end
 
     def parse(iter)
-      [Adress(:main), "goto", @globals.map{|s| s.parse(iter)}]
+      [Adress.new(:endprogram), Adress.new(:main), "goto", @globals.map{|s| s.parse(iter)}, Label.new(:endprogram), "exit"]
     end
   end
 
@@ -236,14 +236,16 @@ module Node
       typelist = @argumentlist.map{|arg| arg[0]}
       typeliststring = typelist.join(" ")
 
-      if @if != "main"
+      if @id != "main"
         label = Label.new("#{@id}(#{typeliststring}) #{@returntype}")
       else
+        if @argumentlist.size != 0
+            raise "Main function argument list should be empty"
+        end
         label = Label.new(:main)
       end
       iter.pushScope
-      iter.pushOperand Operand.new("integer", :return)
-
+      iter.pushOperand Operand.new("int", :return)
       @argumentlist.map{|arg|
         iter.pushOperand Operand.new(arg[0], arg[1])
       }
@@ -335,7 +337,7 @@ module Node
   end
 
   class ForStatement
-    def initialize(declaration=nil, continueexpr=nil, iterationexpr=nil, statement)
+    def initialize(declaration, continueexpr, iterationexpr, statement)
       @declaration = declaration
       @continueexpr = continueexpr
       @iterationexpr = iterationexpr
@@ -583,7 +585,7 @@ module Node
     end
 
     def parse(iter)
-      iter.pushOperand(Operand.new("integer"))
+      iter.pushOperand(Operand.new("int"))
       @value
     end
   end
