@@ -493,6 +493,33 @@ module Node
     end
   end
 
+  class LogicalXor
+    def initialize(lh, rh, operator)
+      @lh = lh
+      @rh = rh
+      @operator = operator
+    end
+
+    def parse(iter)
+      lh = @lh.parse(iter)
+      rh = @rh.parse(iter)
+
+      rhdatatype = iter.popOperand.datatype
+      lhdatatype = iter.popOperand.datatype
+
+      returndatatype = iter.findFunctionIdentifier(@operator, [rhdatatype, lhdatatype])
+      if not returndatatype
+        raise "Undefined function: #{@operator}(#{rhdatatype}, #{lhdatatype})"
+      end
+      iter.pushOperand(Operand.new(returndatatype))
+
+      [0, lh, rh, "topstack", 2, "-",
+       "topstack", 2, "-", "reference_value",
+       "topstack", 2, "-", "reference_value", "or",
+       "assign_reference_value", "and", "not", "and"]
+    end
+  end
+
   class FunctionCall
     def initialize(id, nodelist)
       @id = id
