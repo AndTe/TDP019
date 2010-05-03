@@ -429,7 +429,7 @@ module Node
     end
   end
 
-  class Arithmetic
+  class SimpleExpression
     def initialize(lh, rh, operator)
       @lh = lh
       @rh = rh
@@ -449,6 +449,47 @@ module Node
       end
       iter.pushOperand(Operand.new(returndatatype))
       [lh, rh, @operator]
+    end
+  end
+
+  class LessEquals
+    def initialize(lh, rh, operator)
+      @lh = lh
+      @rh = rh
+      @operator = operator
+    end
+
+    def parse(iter)
+      rh = @rh.parse(iter)
+      lh = @lh.parse(iter)
+
+      rhdatatype = iter.popOperand.datatype
+      lhdatatype = iter.popOperand.datatype
+
+      returndatatype = iter.findFunctionIdentifier(@operator, [rhdatatype, lhdatatype])
+      if not returndatatype
+        raise "Undefined function: #{@operator}(#{rhdatatype}, #{lhdatatype})"
+      end
+      iter.pushOperand(Operand.new(returndatatype))
+      [rh, lh, "<", "not"]
+    end
+  end
+
+  class LogicalNot
+    def initialize(expression)
+      @expression = expression
+    end
+
+    def parse(iter)
+      programreturn = @expression.parse(iter)
+
+      returndatatype = iter.findFunctionIdentifier("not", ["bool"])
+      if not returndatatype
+        raise "Undefined function: not(#{returndatatype})"
+      end
+
+      iter.pushOperand(Operand.new(returndatatype))
+      [programreturn, "not"]
     end
   end
 
