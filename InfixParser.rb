@@ -131,7 +131,7 @@ class InfixParser
 
       rule :multiply_expr do
         match(:multiply_expr, "*", :expression_value){|lh, _, rh| Node::SimpleExpression.new(lh, rh, "*")}
-        match(:multiply_expr, "/", :expression_value){|lh, _, rh| Node::SimpleExpression(lh, rh, "/")}
+        match(:multiply_expr, "/", :expression_value){|lh, _, rh| Node::SimpleExpression.new(lh, rh, "/")}
         match(:expression_value) {|m| m}
       end
 
