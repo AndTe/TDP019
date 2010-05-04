@@ -108,24 +108,24 @@ class Iterator
     @stack.flatten.size
   end
 
-  def pushContinueAdress(adress)
-    @continues << [getStackDepth, adress]
+  def pushContinueAddress(address)
+    @continues << [getStackDepth, address]
   end
 
-  def pushBreakAdress(adress)
-    @breaks << [getStackDepth, adress]
+  def pushBreakAddress(address)
+    @breaks << [getStackDepth, address]
   end
 
-  def popStackedAdresses
+  def popStackedAddresses
     @continues.pop
     @breaks.pop
   end
 
-  def topContinueAdress
+  def topContinueAddress
     @continues.last
   end
 
-  def topBreakAdress
+  def topBreakAddress
     @breaks.last
   end
 
@@ -135,33 +135,33 @@ class Iterator
 
   def getGotoIds
     id = getUniqueId
-    [Label.new(id), Adress.new(id)]
+    [Label.new(id), Address.new(id)]
   end
 end
 
 
 
-def labelAdressing(preprogram)
+def labelAddressing(preprogram)
   preprogram.flatten!
   labels = {}
-  adresses = {}
+  addresses = {}
 
   i = 0
   while(i < preprogram.size)
     if preprogram[i].class == Label
       labels[preprogram.delete_at(i).id] = i
       next
-    elsif preprogram[i].class == Adress
-      if adresses.has_key?(preprogram[i].id)
-        adresses[preprogram[i].id] << i
+    elsif preprogram[i].class == Address
+      if addresses.has_key?(preprogram[i].id)
+        addresses[preprogram[i].id] << i
       else
-        adresses[preprogram[i].id] = [i]
+        addresses[preprogram[i].id] = [i]
       end
     end
     i += 1
   end
 
-  adresses.each_pair{|key, value|
+  addresses.each_pair{|key, value|
     value.each{|i|
       preprogram[i]= labels[key]
     }
@@ -177,7 +177,7 @@ class Label
   end
 end
 
-class Adress
+class Address
   attr_accessor :id
   def initialize(id)
     @id = id
@@ -192,7 +192,7 @@ module Node
     end
 
     def parse(iter)
-      [Adress.new(:endprogram), Adress.new(:main), "goto", @globals.map{|s| s.parse(iter)}, Label.new(:endprogram), "exit"]
+      [Address.new(:endprogram), Address.new(:main), "goto", @globals.map{|s| s.parse(iter)}, Label.new(:endprogram), "exit"]
     end
   end
 
@@ -291,14 +291,14 @@ module Node
     end
 
     def parse(iter)
-      falseLabel, falseAdress = iter.getGotoIds
-      endLabel, endAdress = iter.getGotoIds
+      falseLabel, falseAddress = iter.getGotoIds
+      endLabel, endAddress = iter.getGotoIds
 
-      programreturn = [falseAdress]
+      programreturn = [falseAddress]
       programreturn << @expression.parse(iter)
       programreturn << "if"
       programreturn << @truebranch.parse(iter)
-      programreturn << endAdress
+      programreturn << endAddress
       programreturn << "goto"
       programreturn << falseLabel
       if @falsebranch
@@ -316,23 +316,23 @@ module Node
     end
 
     def parse(iter)
-      startLabel, startAdress = iter.getGotoIds
-      endLabel, endAdress = iter.getGotoIds
+      startLabel, startAddress = iter.getGotoIds
+      endLabel, endAddress = iter.getGotoIds
 
-      iter.addContinueAdress(startAdress)
-      iter.addBreakAdress(endAdress)
+      iter.addContinueAddress(startAddress)
+      iter.addBreakAddress(endAddress)
 
       programreturn = [startLabel]
-      programreturn << endAdress
+      programreturn << endAddress
       programreturn << @expression.parse(iter)
       programreturn << "if"
       programreturn << @startLabel
       programreturn << @statement.parse(iter)
-      programreturn << startAdress
+      programreturn << startAddress
       programreturn << "goto"
       programreturn << endLabel
       programreturn
-      iter.popStackedAdresses
+      iter.popStackedAddresses
     end
   end
 
@@ -345,12 +345,12 @@ module Node
     end
 
     def parse(iter)
-      startLabel, startAdress = iter.getGotoIds
-      endLabel, endAdress = iter.getGotoIds
-      continueLabel, continueAdress = iter.getGotoIds
-      breakLabel, breakAdress = iter.getGotoIds
+      startLabel, startAddress = iter.getGotoIds
+      endLabel, endAddress = iter.getGotoIds
+      continueLabel, continueAddress = iter.getGotoIds
+      breakLabel, breakAddress = iter.getGotoIds
 
-      iter.addBreakAdress(breakAdress)
+      iter.addBreakAddress(breakAddress)
 
       programreturn = []
       iter.pushScope
@@ -358,10 +358,10 @@ module Node
         programreturn << @declaration.parse(iter)
       end
 
-      iter.addContinueAdress(continueAdress)
+      iter.addContinueAddress(continueAddress)
 
       programreturn << startLabel
-      programreturn << endAdress
+      programreturn << endAddress
       if @continueexpr
         programreturn << @continueexpr.parse(iter)
       else
@@ -374,14 +374,14 @@ module Node
       if @iterationexpr
         programreturn << @iterationexpr.parse(iter)
       end
-      programreturn << startAdress
+      programreturn << startAddress
       programreturn << "goto"
       popdepth = iter.popScope
 
       programreturn << popdepth
       programreturn << "pop"
       programreturn << breakLabel
-      iter.popStackedAdresses
+      iter.popStackedAddresses
     end
   end
 
@@ -416,8 +416,8 @@ module Node
     end
 
     def parse(iter)
-      previousDepth, adress = iter.topContinueAdress
-      [iter.getStackDepth - previousDepth, adress, "goto"]
+      previousDepth, address = iter.topContinueAddress
+      [iter.getStackDepth - previousDepth, address, "goto"]
     end
   end
 
@@ -426,8 +426,8 @@ module Node
     end
 
     def parse(iter)
-      previousDepth, adress = iter.topBreakAdress
-      [iter.getStackDepth - previousDepth, adress, "goto"]
+      previousDepth, address = iter.topBreakAddress
+      [iter.getStackDepth - previousDepth, address, "goto"]
     end
   end
 
@@ -544,14 +544,14 @@ module Node
 
       datatypeliststring = datatypelist.join(" ")
 
-      adress = Adress.new("#{@id}(#{datatypeliststring}) #{returntype}")
+      address = Address.new("#{@id}(#{datatypeliststring}) #{returntype}")
 
-      returnlabel = Label.new(adress)
+      returnlabel = Label.new(address)
 
 
-      returnadress = Adress.new(adress)
+      returnaddress = Address.new(address)
       iter.pushOperand Operand.new(returntype)
-      [returnadress, programlist, adress, "goto", returnlabel]
+      [returnaddress, programlist, address, "goto", returnlabel]
     end
   end
 

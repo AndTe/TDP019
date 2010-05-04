@@ -59,7 +59,7 @@ int fn(s1, s2) {
 
 return e;
 
-[:bottom_functionscope_adress, e, =, (pop local variables/scope), swap]
+[:bottom_functionscope_address, e, =, (pop local variables/scope), swap]
 
 ---------------
 
@@ -67,6 +67,6 @@ fn(e1, e2);
                                 end
                                  |
                                  v
-[:end, e1, e2, :fn_adress, goto]
+[:end, e1, e2, :fn_address, goto]
 
 ---------------
