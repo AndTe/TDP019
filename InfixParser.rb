@@ -35,7 +35,8 @@ class InfixParser
       end
 
       rule :function_declaration do
-        match(:datatype, :function_identifier, "(", :argument_list, ")", :block) {|ret, id, _, arg , _, block| Node::FunctionDeclaration.new(id, ret, arg, block)}
+        match(:datatype, :function_identifier, "(", :argument_list, ")", :block) {|ret, id, _, arg , _, block|
+          Node::FunctionDeclaration.new(id, ret, arg, block)}
       end
 
       rule :argument_list do
@@ -61,6 +62,8 @@ class InfixParser
         match(:variable_declaration, :stmt_end) {|a, b| a}
         match(:assignment_statement, :stmt_end) {|a, b| a}
         match(:return, :stmt_end) {|r, _| r}
+        match(:while) {|m| m}
+        match(:for) {|m| m}
         match(:block) {|m| m}
       end
 
@@ -69,17 +72,25 @@ class InfixParser
         #match("return")
       end
 
+      rule :while do
+        match("while", "(", :expression, ")", :statement) {|_, _, e, _, s| Node::WhileStatement.new(e, s)}
+      end
+
+      rule :for do
+        match("for", "(", :variable_declaration, ";", :expression, ";", :expression,")", :statement) {|_, _, vd, _, ce, _, ie, _, s|
+          Node::ForStatement.new(vd, ce, ie, s)}
+      end
 
       rule :variable_declaration do
         match(:datatype, :variable, "=", :expression) {|t, v, _, e| Node::VariableDeclaration.new(t,v,e, true)}
       end
 
       rule :assignment_statement do
-        match(:assignment_expr) {|a| "[assignment #{a}]"}
+        match(:assignment_expr) {|m| Node::AssignStatement.new(m)}
       end
 
       rule :assignment_expr do
-        match(:variable, "=", :expression){|lh, _, rh| raise "ops"}
+        match(:variable, "=", :expression){|v, _, rh| Node::AssignExpression.new(v, rh)}
       end
 
       rule :function_identifier do

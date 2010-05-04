@@ -454,6 +454,40 @@ module Node
     end
   end
 
+  class AssignStatement
+    def initialize(ae)
+      @ae = ae
+    end
+
+    def parse(iter)
+      programreturn = [@ae.parse(iter)]
+      iter.popOperand
+      programreturn << 1 << "pop"
+      programreturn
+    end
+  end
+
+  class AssignExpression
+    def initialize(variableId, rh)
+      @variableId = variableId
+      @rh = rh
+    end
+
+    def parse(iter)
+
+      rh = @rh.parse(iter)
+      item, index = iter.getVariable(@variableId) # c 999 i
+      if not item
+        raise "aj!"
+      end
+      programreturn = [rh]
+      programreturn << "stacktop" << index << "-"
+      programreturn << "stacktop" << 1 << "-" << "reference_value" << "assign_to_reference"
+      p iter.stack
+      programreturn
+    end
+  end
+
   class LessEquals
     def initialize(lh, rh)
       @lh = lh
