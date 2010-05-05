@@ -6,7 +6,7 @@ class InfixParser
     @InfixParser = Parser.new("infix parser") do
       token(/\d+/) {|m| m.to_i}
       token(/\s+/)
-      token(/;/) {:stmt_end}
+      token(/;/) {|m| m}
       token(/<=/) {|m| m}
       token(/>=/) {|m| m}
       token(/\=\=/) {|m| m}
@@ -68,6 +68,10 @@ class InfixParser
         match(:if) {|m| m}
       end
 
+      rule :stmt_end do
+        match(";")
+      end
+
       rule :return do
         match("return", :expression) {|_, e| Node::Return.new(e)}
         #match("return")
@@ -78,8 +82,23 @@ class InfixParser
       end
 
       rule :for do
-        match("for", "(", :variable_declaration, ";", :expression, ";", :expression,")", :statement) {|_, _, vd, _, ce, _, ie, _, s|
+        match("for", "(", :for_declaration, ";", :for_expression, ";", :for_assignment, ")", :statement) {|_, _, vd, _, ce, _, ie, _, s|
           Node::ForStatement.new(vd, ce, ie, s)}
+      end
+
+      rule :for_declaration do
+        match(:variable_declaration) {|m| m}
+        match() {false}
+      end
+
+      rule :for_expression do
+        match(:expression) {|m| m}
+        match() {false}
+      end
+
+      rule :for_assignment do
+        match(:assignment_statement) {|m| m}
+        match() {false}
       end
 
       rule :if do

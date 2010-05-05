@@ -384,23 +384,28 @@ module Node
       iter.addContinueAddress(continueAddress)
 
       programreturn << startLabel
-      programreturn << endAddress
+      iter.pushOperand(Operand.new("int")) # push end address to stack
+      programreturn << endAddress          #
       if @continueexpr
         programreturn << @continueexpr.parse(iter)
       else
         programreturn << "true"
       end
       programreturn << "if"
+      iter.popOperand
+      iter.popOperand
       programreturn << @statement.parse(iter)
 
       programreturn << continueLabel
       if @iterationexpr
         programreturn << @iterationexpr.parse(iter)
       end
-      programreturn << startAddress
+      iter.pushOperand(Operand.new("int")) # push start address to stack
+      programreturn << startAddress        #
       programreturn << "goto"
+      iter.popOperand
       popdepth = iter.popScope
-
+      programreturn << endLabel
       programreturn << popdepth
       programreturn << "pop"
       programreturn << breakLabel
