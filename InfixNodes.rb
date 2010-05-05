@@ -137,6 +137,14 @@ class Iterator
     id = getUniqueId
     [Label.new(id), Address.new(id)]
   end
+
+  def addContinueAddress(address)
+    @continues << address
+  end
+
+  def addBreakAddress(address)
+    @breaks << address
+  end
 end
 
 
@@ -163,10 +171,13 @@ def labelAddressing(preprogram)
 
   addresses.each_pair{|key, value|
     value.each{|i|
-      preprogram[i]= labels[key]
+      if preprogram[i]
+        preprogram[i] = labels[key]
+      else
+        raise "Label #{i} is missing"
+      end
     }
   }
-
   preprogram.join(" ")
 end
 
@@ -286,7 +297,7 @@ module Node
     end
   end
 
-  class IfStatment
+  class IfStatement
     def initialize(expression, truebranch, falsebranch=nil)
       @expression = expression
       @truebranch = truebranch
@@ -297,12 +308,17 @@ module Node
       falseLabel, falseAddress = iter.getGotoIds
       endLabel, endAddress = iter.getGotoIds
 
-      programreturn = [falseAddress]
+      iter.pushOperand(Operand.new("int")) # push false address to stack
+      programreturn = [falseAddress]       #
       programreturn << @expression.parse(iter)
       programreturn << "if"
+      iter.popOperand
+      iter.popOperand
       programreturn << @truebranch.parse(iter)
-      programreturn << endAddress
+      iter.pushOperand(Operand.new("int")) # push end address to stack
+      programreturn << endAddress          #
       programreturn << "goto"
+      iter.popOperand
       programreturn << falseLabel
       if @falsebranch
         programreturn << @falsebranch.parse(iter)
@@ -334,8 +350,8 @@ module Node
       programreturn << startAddress
       programreturn << "goto"
       programreturn << endLabel
-      programreturn
       iter.popStackedAddresses
+      programreturn
     end
   end
 
@@ -385,6 +401,7 @@ module Node
       programreturn << "pop"
       programreturn << breakLabel
       iter.popStackedAddresses
+      programreturn
     end
   end
 
@@ -618,6 +635,17 @@ module Node
 
     def parse(iter)
       iter.pushOperand(Operand.new("int"))
+      @value
+    end
+  end
+
+  class Boolean
+    def initialize(value)
+      @value = value
+    end
+
+    def parse(iter)
+      iter.pushOperand(Operand.new("bool"))
       @value
     end
   end
