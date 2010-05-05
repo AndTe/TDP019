@@ -192,7 +192,7 @@ module Node
     end
 
     def parse(iter)
-      [Address.new(:endprogram), Address.new(:main), "goto", @globals.map{|s| s.parse(iter)}, Label.new(:endprogram), "exit"]
+      [0, Address.new(:endprogram), Address.new(:main), "goto", @globals.map{|s| s.parse(iter)}, Label.new(:endprogram), "exit"]
     end
   end
 
@@ -207,13 +207,15 @@ module Node
     def parse(iter)
       ep = @expression.parse(iter)
       e = iter.popOperand
-      if @datatype != e.datatype
-        raise "Incompatable datatypes: #{@datatype} and #{e.datatype}"
-      end
 
       if not iter.validDatatype(@datatype)
         raise "Undefined datatype: #{@datatype}"
       end
+
+      if @datatype != e.datatype
+        raise "Incompatable datatypes: #{@datatype} and #{e.datatype}"
+      end
+
       if @local
         iter.pushOperand(e)
         iter.bindTopToVariable(@variable)
@@ -245,6 +247,7 @@ module Node
         label = Label.new(:main)
       end
       iter.pushScope
+      iter.pushOperand Operand.new(@returntype, :returnValue)
       iter.pushOperand Operand.new("int", :return)
       @argumentlist.map{|arg|
         iter.pushOperand Operand.new(arg[0], arg[1])
@@ -391,23 +394,15 @@ module Node
     end
 
     def parse(iter)
-      depth = iter.getStackDepth
-      if depth < 2
-        programreturn = @expression.parse(iter)
-        programreturn << "swap" << "goto"
-      else
-        operand, rindex = iter.getVariable(:return)
-        rindex -= 1
-        programreturn = ["stacktop", rindex, "-"]
-        programreturn << @expression.parse(iter)
-        programreturn << "assign_to_reference"
-        programreturn << (depth - 2)
-        programreturn << "pop"
-        programreturn << "swap"
-        programreturn << "goto"
-      end
 
-      programreturn
+      depth = iter.getStackDepth - 2
+      iter.pushOperand Operand.new("int")
+      operand, rindex = iter.getVariable(:returnValue)
+      e = @expression.parse(iter)
+
+      #iter.popOperand
+
+      ["stacktop", rindex - 1, "-", e, "assign_to_reference", depth, "pop", "goto"]
     end
   end
 
@@ -476,14 +471,13 @@ module Node
     def parse(iter)
 
       rh = @rh.parse(iter)
-      item, index = iter.getVariable(@variableId) # c 999 i
+      item, index = iter.getVariable(@variableId)
       if not item
-        raise "aj!"
+        raise "Undefined variable: #{@variableId}"
       end
       programreturn = [rh]
       programreturn << "stacktop" << index << "-"
       programreturn << "stacktop" << 1 << "-" << "reference_value" << "assign_to_reference"
-      p iter.stack
       programreturn
     end
   end
@@ -561,10 +555,15 @@ module Node
     end
 
     def parse(iter)
+      returnValue = Operand.new(:void) #reserve return value slot
+      iter.pushOperand(returnValue)
+
       programlist = @nodelist.map{|n|
         n.parse(iter)
       }
 
+
+      #get the operand types from the iterator stack
       numargs = programlist.size
       operandlist = []
       1.upto(numargs) {
@@ -575,17 +574,16 @@ module Node
       }
 
       returntype = iter.findFunctionIdentifier(@id, datatypelist)
+      returnValue.datatype = returntype
 
       datatypeliststring = datatypelist.join(" ")
 
       address = Address.new("#{@id}(#{datatypeliststring}) #{returntype}")
-
       returnlabel = Label.new(address)
-
-
       returnaddress = Address.new(address)
+
       iter.pushOperand Operand.new(returntype)
-      [returnaddress, programlist, address, "goto", returnlabel]
+      [0, returnaddress, programlist, address, "goto", returnlabel]
     end
   end
 
@@ -599,7 +597,7 @@ module Node
 
       if item
         iter.pushOperand(Operand.new(item.datatype))
-        ["stacktop", index + 1, "-", "reference_value"]
+        ["stacktop", index, "-", "reference_value"]
       else
         item, index = iter.getGlobalVariable(@name)
 
