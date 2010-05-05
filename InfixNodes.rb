@@ -342,13 +342,17 @@ module Node
       iter.addBreakAddress(endAddress)
 
       programreturn = [startLabel]
-      programreturn << endAddress
+      iter.pushOperand(Operand.new("int")) # push end address to stack
+      programreturn << endAddress          #
       programreturn << @expression.parse(iter)
       programreturn << "if"
-      programreturn << @startLabel
+      iter.popOperand
+      iter.popOperand
       programreturn << @statement.parse(iter)
-      programreturn << startAddress
+      iter.pushOperand(Operand.new("int")) # push start address to stack
+      programreturn << startAddress        #
       programreturn << "goto"
+      iter.popOperand
       programreturn << endLabel
       iter.popStackedAddresses
       programreturn
