@@ -65,6 +65,7 @@ class InfixParser
         match(:while) {|m| m}
         match(:for) {|m| m}
         match(:block) {|m| m}
+        match(:if) {|m| m}
       end
 
       rule :return do
@@ -79,6 +80,11 @@ class InfixParser
       rule :for do
         match("for", "(", :variable_declaration, ";", :expression, ";", :expression,")", :statement) {|_, _, vd, _, ce, _, ie, _, s|
           Node::ForStatement.new(vd, ce, ie, s)}
+      end
+
+      rule :if do
+        match("if", "(", :expression, ")", :statement, "else", :statement) {|_, _, e, _, trues, _, falses| Node::IfStatement.new(e, trues, falses)}
+        match("if", "(", :expression, ")", :statement) {|_, _, e, _, s| Node::IfStatement.new(e, s, false)}
       end
 
       rule :variable_declaration do
@@ -130,7 +136,7 @@ class InfixParser
         match(:comparison_expr,"==", :plus_expr) {|lh, _, rh| Node::SimpleExpression.new(lh, rh, "==")}
         match(:comparison_expr,"!=", :plus_expr) {|lh, _, rh| Node::LogicalNot.new(Node::SimpleExpression.new(lh, rh, "=="))}
         match(:comparison_expr,"<", :plus_expr) {|lh, _, rh| Node::SimpleExpression.new(lh, rh, "<")}
-        match(:comparison_expr,">", :plus_expr) {|lh, _, rh| Node::SimpleExpression.new(rh, lh, ">")}
+        match(:comparison_expr,">", :plus_expr) {|lh, _, rh| Node::SimpleExpression.new(rh, lh, "<")}
         match(:plus_expr) {|m| m}
       end
 
@@ -149,6 +155,8 @@ class InfixParser
       rule :expression_value do
         #match(:assignment_expr) {|m| m}
         match("(", :expression, ")") {|_, m, _| m}
+        match("true") {Node::Boolean.new(true)}
+        match("false") {Node::Boolean.new(false)}
         match(Fixnum)  {|m| Node::Integer.new(m)}
         match(:variable) {|m| Node::PushVariable.new(m)}
       end
