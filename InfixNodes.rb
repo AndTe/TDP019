@@ -138,13 +138,6 @@ class Iterator
     [Label.new(id), Address.new(id)]
   end
 
-  def addContinueAddress(address)
-    @continues << address
-  end
-
-  def addBreakAddress(address)
-    @breaks << address
-  end
 end
 
 
@@ -338,8 +331,8 @@ module Node
       startLabel, startAddress = iter.getGotoIds
       endLabel, endAddress = iter.getGotoIds
 
-      iter.addContinueAddress(startAddress)
-      iter.addBreakAddress(endAddress)
+      iter.pushContinueAddress(startAddress)
+      iter.pushBreakAddress(endAddress)
 
       programreturn = [startLabel]
       iter.pushOperand(Operand.new("int")) # push end address to stack
@@ -373,15 +366,14 @@ module Node
       continueLabel, continueAddress = iter.getGotoIds
       breakLabel, breakAddress = iter.getGotoIds
 
-      iter.addBreakAddress(breakAddress)
-
       programreturn = []
       iter.pushScope
+      iter.pushBreakAddress(breakAddress)
       if @declaration
         programreturn << @declaration.parse(iter)
       end
 
-      iter.addContinueAddress(continueAddress)
+      iter.pushContinueAddress(continueAddress)
 
       programreturn << startLabel
       iter.pushOperand(Operand.new("int")) # push end address to stack
@@ -438,7 +430,7 @@ module Node
 
     def parse(iter)
       previousDepth, address = iter.topContinueAddress
-      [iter.getStackDepth - previousDepth, address, "goto"]
+      [iter.getStackDepth - previousDepth, "pop", address, "goto"]
     end
   end
 
@@ -448,7 +440,7 @@ module Node
 
     def parse(iter)
       previousDepth, address = iter.topBreakAddress
-      [iter.getStackDepth - previousDepth, address, "goto"]
+      [iter.getStackDepth - previousDepth, "pop", address, "goto"]
     end
   end
 

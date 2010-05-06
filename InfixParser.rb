@@ -62,6 +62,8 @@ class InfixParser
         match(:variable_declaration, :stmt_end) {|a, b| a}
         match(:assignment_statement, :stmt_end) {|a, b| a}
         match(:return, :stmt_end) {|r, _| r}
+        match("break", :stmt_end) {Node::Break.new()}
+        match("continue", :stmt_end) {Node::Continue.new()}
         match(:while) {|m| m}
         match(:for) {|m| m}
         match(:block) {|m| m}
