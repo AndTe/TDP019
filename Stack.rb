@@ -13,7 +13,6 @@ class Stack < Hash
   end
 
   def eat(program)
-
     while (@continueprogram)
       code = program[@programindex]
       @eaten << [@programindex, code]
@@ -112,11 +111,6 @@ class Stack < Hash
     end
   end
 
-  def print
-    value = popStack
-    puts value
-  end
-
   def swap
     value1, value2 = popStack, popStack
     self << value1 << value2
@@ -172,4 +166,12 @@ class Stack < Hash
     self << (not value)
   end
 
+  def input
+    self << getc
+  end
+
+  def output
+    asciiValue = popStack
+    print asciiValue.chr
+  end
 end

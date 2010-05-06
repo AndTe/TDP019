@@ -103,9 +103,9 @@ class Test_Stack < Test::Unit::TestCase
     assert_equal([4, false, :if, 11, :exit], lunch)
   end
 
-  def test_print
+  def test_output
     @engine.reset
-    program = PostfixParseString("1 42 print 2 exit")
+    program = PostfixParseString("1 42 output 2 exit")
     @engine.eat(program)
     assert_equal({1=>1, 2=>2}, @engine)
   end

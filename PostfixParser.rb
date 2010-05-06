@@ -9,10 +9,9 @@ class PostfixParser
       token(/\//) {:divide}
       token(/==/) {:equals}
       token(/</) {:less}
-      token(/".*?[^\\]"/) {|m| m}
       token(/\s+/)
       token(/\d+/) {|m| m.to_i }
-      token(/stacktop|pop|goto|swap|exit|print|not|and|or|if|assign_to_reference|reference_value|delete_reference|reference|true|false/) {|m| m.to_sym}
+      token(/stacktop|pop|goto|swap|exit|output|input|not|and|or|if|assign_to_reference|reference_value|delete_reference|reference|true|false/) {|m| m.to_sym}
 
       start :expr do
         match(:atom, :expr) {|a, b| [a] + b}
@@ -23,7 +22,6 @@ class PostfixParser
         match(:true) {true}
         match(:false) {false}
         match(Integer) {|a| a}
-        match(String) {|a| a}
         match(Symbol) {|a| a}
       end
     end
