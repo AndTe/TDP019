@@ -14,10 +14,13 @@ class InfixParser
       token(/[\(\)\{\}]/) {|m| m}
       token(/\=/) {|m| m}
       token(/[\+\-\*\/]/){|m| m}
-
+      token(/".*?[^\\]"/) {|m| m} # matches strings
+      token(/' '/) {|m| m} # matches spacecharacter
+      token(/'/) {|m| m}
       token(/</) {|m| m}
       token(/>/) {|m| m}
       token(/\w+/) {|m| m}
+      token(/\S{1,2}/) {|m| m}
 
 
       start :program do
@@ -179,11 +182,18 @@ class InfixParser
         match("true") {Node::Boolean.new(true)}
         match("false") {Node::Boolean.new(false)}
         match(Fixnum)  {|m| Node::Integer.new(m)}
+        match(:char) {|m| m}
         match(:variable) {|m| Node::PushVariable.new(m)}
       end
 
-
-
+      rule :char do
+        match("'", /\S/, "'") {|_,c ,_| Node::Integer.new(eval("?#{c}"))}
+        match("' '") {Node::Integer.new(?\s)}
+        match("'\\n'") {Node::Integer.new(?\n)}
+        match("'\\r'") {Node::Integer.new(?\r)}
+        match("'\\t'") {Node::Integer.new(?\t)}
+        match("'\\0'") {Node::Integer.new(?\0)}
+      end
 
       rule :identifier do
         match(/\w+/) {|m| m}
