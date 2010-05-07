@@ -23,6 +23,8 @@ class Stack < Hash
         return self
       end
 
+      p self.sort
+      p code
       @programindex += 1
 
       if code.class == Symbol

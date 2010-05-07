@@ -16,11 +16,12 @@ class InfixParser
       token(/[\+\-\*\/]/){|m| m}
       token(/".*?[^\\]"/) {|m| m} # matches strings
       token(/' '/) {|m| m} # matches spacecharacter
+      token(/'\S{1,2}'/) {|m| m}
+
       token(/'/) {|m| m}
       token(/</) {|m| m}
       token(/>/) {|m| m}
       token(/\w+/) {|m| m}
-      token(/\S{1,2}/) {|m| m}
 
 
       start :program do
@@ -67,10 +68,12 @@ class InfixParser
         match(:return, :stmt_end) {|r, _| r}
         match("break", :stmt_end) {Node::Break.new()}
         match("continue", :stmt_end) {Node::Continue.new()}
+        match(:function_call, :stmt_end) {|m, _| Node::ExpressionStatement.new(m)}
         match(:while) {|m| m}
         match(:for) {|m| m}
         match(:block) {|m| m}
         match(:if) {|m| m}
+
       end
 
       rule :stmt_end do
@@ -116,7 +119,7 @@ class InfixParser
       end
 
       rule :assignment_statement do
-        match(:assignment_expr) {|m| Node::AssignStatement.new(m)}
+        match(:assignment_expr) {|m| Node::ExpressionStatement.new(m)}
       end
 
       rule :assignment_expr do
@@ -165,14 +168,16 @@ class InfixParser
       end
 
       rule :plus_expr do
-        match(:plus_expr, "+", :multiply_expr) {|lh, _, rh| Node::SimpleExpression.new(lh, rh, "+")}
-        match(:plus_expr, "-", :multiply_expr) {|lh, _, rh| Node::SimpleExpression.new(lh, rh, "-")}
+        #match(:plus_expr, "+", :multiply_expr) {|lh, _, rh| Node::FunctionCall.new("+", [lh, rh])}
+        #match(:plus_expr, "-", :multiply_expr) {|lh, _, rh| Node::FunctionCall.new("-", [lh, rh])}
+        match(:plus_expr, "+", :multiply_expr) {|lh, _, rh| Node::SimpleExpression.new(lh, rh,"+")}
+        match(:plus_expr, "-", :multiply_expr) {|lh, _, rh| Node::SimpleExpression.new(lh, rh,"-")}
         match(:multiply_expr) {|m| m}
       end
 
       rule :multiply_expr do
-        match(:multiply_expr, "*", :expression_value){|lh, _, rh| Node::SimpleExpression.new(lh, rh, "*")}
-        match(:multiply_expr, "/", :expression_value){|lh, _, rh| Node::SimpleExpression.new(lh, rh, "/")}
+        match(:multiply_expr, "*", :expression_value){|lh, _, rh| Node::FunctionCall.new("*", [lh, rh])}
+        match(:multiply_expr, "/", :expression_value){|lh, _, rh| Node::FunctionCall.new("/", [lh, rh])}
         match(:expression_value) {|m| m}
       end
 
@@ -182,18 +187,31 @@ class InfixParser
         match("true") {Node::Boolean.new(true)}
         match("false") {Node::Boolean.new(false)}
         match(Fixnum)  {|m| Node::Integer.new(m)}
+        match(:function_call) {|m| m}
         match(:char) {|m| m}
         match(:variable) {|m| Node::PushVariable.new(m)}
       end
 
       rule :char do
-        match("'", /\S/, "'") {|_,c ,_| Node::Integer.new(eval("?#{c}"))}
+        match(/'\S'/) {|c| Node::Integer.new(c[1])}
         match("' '") {Node::Integer.new(?\s)}
         match("'\\n'") {Node::Integer.new(?\n)}
         match("'\\r'") {Node::Integer.new(?\r)}
         match("'\\t'") {Node::Integer.new(?\t)}
         match("'\\0'") {Node::Integer.new(?\0)}
       end
+
+      rule :function_call do
+        match(:identifier, "(", :function_call_arguments, ")") {|id, _, as, _| Node::FunctionCall.new(id, as)}
+        match(:identifier, "(", ")") {|id, _, _| Node::FunctionCall.new(id, [])}
+      end
+
+      rule :function_call_arguments do
+        match(:expression, ",", :function_call_arguments) {|e1, _, es| [e1] + es}
+        match(:expression) {|m| [m]}
+        match() {[]}
+      end
+
 
       rule :identifier do
         match(/\w+/) {|m| m}
