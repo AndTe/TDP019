@@ -93,7 +93,6 @@ class Stack < Hash
   end
 
   def equals
-	  p @programindex
     right, left = popStack, popStack
     self << (left == right)
   end

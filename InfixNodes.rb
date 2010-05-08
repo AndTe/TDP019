@@ -6,6 +6,28 @@ class Operand
   end
 end
 
+class FunctionIdentifier
+  attr_accessor :id, :argumentTypes, :returnType, :functionBlock, :inline, :address
+  def initialize(id, argumentTypes, returnType, functionBlock, inline)
+    @id = id
+    @argumentTypes = argumentTypes
+    @returnType = returnType
+    @functionBlock = functionBlock
+    @inline = inline
+    args = argumentTypes.join(",")
+    @address = Address.new("#{id}(#{args})")
+  end
+  def clone
+    cid = @id.clone
+    cargumentTypes = @argumentTypes.clone
+    creturnType = @returnType.clone
+    cfunctionBlock = @functionBlock.clone
+    cinline = @inline
+    a = FunctionIdentifier.new(cid, cargumentTypes, creturnType, cfunctionBlock, cinline)
+    a
+  end
+end
+
 # Iterates over the constraints network, validates the node constructions
 # and generates the postfix code
 class Iterator
@@ -56,8 +78,13 @@ class Iterator
     @globalvariables << item
   end
 
-  def newFunctionIdentifier(name, args, outdatatype)
-    @functions[[name, args]] = outdatatype
+  def newFunctionIdentifier(id, argumentTypes, returnType, functionBlock, inline)
+    at = argumentTypes.join(",")
+    fnLabel, fnAddress = getGotoIds("#{id}(#{at})")
+    if not inline
+      functionBlock.unshift(fnLabel)
+    end
+    @functions[[id, argumentTypes]] = FunctionIdentifier.new(id, argumentTypes, returnType, functionBlock, inline)
   end
 
   def newDatatype(name)
@@ -72,7 +99,7 @@ class Iterator
   end
 
   def findFunctionIdentifier(name, args)
-    @functions[[name, args]]
+    return @functions[[name, args]]
   end
 
   def getVariable(name)
@@ -133,8 +160,7 @@ class Iterator
     @uniqueid += 1
   end
 
-  def getGotoIds
-    id = getUniqueId
+  def getGotoIds(id=getUniqueId)
     [Label.new(id), Address.new(id)]
   end
 
@@ -196,7 +222,13 @@ module Node
     end
 
     def parse(iter)
-      [0, Address.new(:endprogram), Address.new(:main), "goto", @globals.map{|s| s.parse(iter)}, Label.new(:endprogram), "exit"]
+      programreturn = [0, Address.new(:endprogram), Address.new("main()"), "goto", @globals.map{|s| s.parse(iter)}, Label.new(:endprogram), "exit"]
+      iter.functions.each_value{|fid|
+        if not fid.inline
+          programreturn << fid.functionBlock
+        end
+      }
+      programreturn
     end
   end
 
@@ -243,24 +275,30 @@ module Node
       typeliststring = typelist.join(" ")
 
       if @id != "main"
-        label = Label.new("#{@id}(#{typeliststring}) #{@returntype}")
+        label = Label.new("#{@id}(#{typeliststring})")
       else
         if @argumentlist.size != 0
-            raise "Main function argument list should be empty"
+          raise "Main function argument list should be empty"
         end
         label = Label.new(:main)
       end
+
+      iter.newFunctionIdentifier(@id, typelist, @returntype, [], false) #
+
       iter.pushScope
-      iter.pushOperand Operand.new(@returntype, :returnValue)
-      iter.pushOperand Operand.new("int", :return)
       @argumentlist.map{|arg|
         iter.pushOperand Operand.new(arg[0], arg[1])
       }
+
+      iter.pushOperand Operand.new(@returntype, :returnValue)
+      iter.pushOperand Operand.new("int", :returnAddress)
+
       programreturn = @block.parse(iter)
 
       iter.popScope
-      iter.newFunctionIdentifier(@id, typelist, @returntype)
-      [label, programreturn]
+
+      iter.newFunctionIdentifier(@id, typelist, @returntype, programreturn, false) #
+      []
     end
   end
 
@@ -412,15 +450,16 @@ module Node
     end
 
     def parse(iter)
-
+      # args, ret_val, ret_addr
       depth = iter.getStackDepth - 2
-      iter.pushOperand Operand.new("int")
       operand, rindex = iter.getVariable(:returnValue)
+
+      iter.pushOperand Operand.new("int")
       e = @expression.parse(iter)
+      iter.popOperand
 
-      #iter.popOperand
-
-      ["stacktop", rindex - 1, "-", e, "assign_to_reference", depth, "pop", "goto"]
+      ["stacktop", rindex, "-", e, "assign_to_reference", rindex - 1, "pop", "goto"]
+      # args, ret_val
     end
   end
 
@@ -446,6 +485,7 @@ module Node
 
   class SimpleExpression
     def initialize(lh, rh, operator)
+      raise "noooo use functionCall"
       @lh = lh
       @rh = rh
       @operator = operator
@@ -458,7 +498,7 @@ module Node
       rhdatatype = iter.popOperand.datatype
       lhdatatype = iter.popOperand.datatype
 
-      returndatatype = iter.findFunctionIdentifier(@operator, [rhdatatype, lhdatatype])
+      returndatatype = iter.findFunctionIdentifier(@operator, [rhdatatype, lhdatatype]).returnType
       if not returndatatype
         raise "Undefined function: #{@operator}(#{rhdatatype}, #{lhdatatype})"
       end
@@ -467,7 +507,7 @@ module Node
     end
   end
 
-  class AssignStatement
+  class ExpressionStatement
     def initialize(ae)
       @ae = ae
     end
@@ -489,14 +529,17 @@ module Node
     def parse(iter)
 
       rh = @rh.parse(iter)
+      programreturn = [rh]
+
       item, index = iter.getVariable(@variableId)
       if not item
         raise "Undefined variable: #{@variableId}"
       end
-      programreturn = [rh]
+
       programreturn << "stacktop" << index << "-"
       programreturn << "stacktop" << 1 << "-" << "reference_value" << "assign_to_reference"
       programreturn
+
     end
   end
 
@@ -513,7 +556,7 @@ module Node
       rhdatatype = iter.popOperand.datatype
       lhdatatype = iter.popOperand.datatype
 
-      returndatatype = iter.findFunctionIdentifier("xor", [rhdatatype, lhdatatype])
+      returndatatype = iter.findFunctionIdentifier("xor", [rhdatatype, lhdatatype]).returnType
       if not returndatatype
         raise "Undefined function: xor(#{rhdatatype}, #{lhdatatype})"
       end
@@ -530,7 +573,7 @@ module Node
     def parse(iter)
       programreturn = @expression.parse(iter)
 
-      returndatatype = iter.findFunctionIdentifier("not", ["bool"])
+      returndatatype = iter.findFunctionIdentifier("not", ["bool"]).returnType
       if not returndatatype
         raise "Undefined function: not(#{returndatatype})"
       end
@@ -553,55 +596,84 @@ module Node
       rhdatatype = iter.popOperand.datatype
       lhdatatype = iter.popOperand.datatype
 
-      returndatatype = iter.findFunctionIdentifier(@operator, [rhdatatype, lhdatatype])
+      returndatatype = iter.findFunctionIdentifier(@operator, [rhdatatype, lhdatatype]).returnType
       if not returndatatype
         raise "Undefined function: #{@operator}(#{rhdatatype}, #{lhdatatype})"
       end
       iter.pushOperand(Operand.new(returndatatype))
 
-      [0, lh, rh, "topstack", 2, "-",
-       "topstack", 2, "-", "reference_value",
-       "topstack", 2, "-", "reference_value", "or",
+      [0, lh, rh, "stacktop", 2, "-",
+       "stacktop", 2, "-", "reference_value",
+       "stacktop", 2, "-", "reference_value", "or",
        "assign_reference_value", "and", "not", "and"]
     end
   end
 
   class FunctionCall
-    def initialize(id, nodelist)
+    def initialize(id, argumentNodes)
       @id = id
-      @nodelist = nodelist
+      @argumentNodes = argumentNodes
     end
 
     def parse(iter)
-      returnValue = Operand.new(:void) #reserve return value slot
-      iter.pushOperand(returnValue)
-
-      programlist = @nodelist.map{|n|
+      programlist = @argumentNodes.map{|n|
         n.parse(iter)
       }
-
+      #[args1..argsN]
 
       #get the operand types from the iterator stack
-      numargs = programlist.size
-      operandlist = []
-      1.upto(numargs) {
-        operandlist << iter.popOperand
+      operands = []
+      1.upto(@argumentNodes.size) {
+        operands << iter.popOperand
       }
-      datatypelist = operandlist.reverse.map{|o|
+
+      datatypes = operands.reverse.map{|o|
         o.datatype
       }
 
-      returntype = iter.findFunctionIdentifier(@id, datatypelist)
-      returnValue.datatype = returntype
+      functionId = iter.findFunctionIdentifier(@id, datatypes)
 
-      datatypeliststring = datatypelist.join(" ")
+      typeList = datatypes.join(",")
 
-      address = Address.new("#{@id}(#{datatypeliststring}) #{returntype}")
-      returnlabel = Label.new(address)
-      returnaddress = Address.new(address)
+      if not functionId
+        raise "FunctionId not declared: #{@id}(#{typeList})"
+      end
+      #[args1..argsN]
+      if functionId.inline
+        programlist << [functionId.functionBlock]
+        #[ret_val]
+      else
+        returnValue = Operand.new(:void) #reserve return value slot
 
-      iter.pushOperand Operand.new(returntype)
-      [0, returnaddress, programlist, address, "goto", returnlabel]
+        iter.pushOperand(returnValue)
+        iter.pushOperand(Operand.new("int"))  #return address
+
+        fnAddress = functionId.address
+        returnLabel, returnAddress = iter.getGotoIds
+
+
+        if @argumentNodes.size == 0
+          #[ret_val, ret_add fn_add]
+          programlist << [0, returnAddress, fnAddress, "goto", returnLabel]
+        else
+
+          programlist << [0, returnAddress, fnAddress, "goto"]
+          #[args,  ret_val, ret_add]
+
+          #[arg1, arg2, ret_val] =>           #[ret_val, arg2]
+          programlist << [returnLabel,
+                          "stacktop", @argumentNodes.size, "-", "swap",
+
+                          "assign_to_reference", @argumentNodes.size - 1, "pop"]
+
+        end
+        iter.popOperand
+        iter.popOperand
+      end
+
+
+      iter.pushOperand(Operand.new(functionId.returnType))
+      programlist
     end
   end
 
@@ -612,7 +684,6 @@ module Node
 
     def parse(iter)
       item, index = iter.getVariable(@name)
-
       if item
         iter.pushOperand(Operand.new(item.datatype))
         ["stacktop", index, "-", "reference_value"]
