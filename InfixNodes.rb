@@ -17,21 +17,12 @@ class FunctionIdentifier
     args = argumentTypes.join(",")
     @address = Address.new("#{id}(#{args})")
   end
-  def clone
-    cid = @id.clone
-    cargumentTypes = @argumentTypes.clone
-    creturnType = @returnType.clone
-    cfunctionBlock = @functionBlock.clone
-    cinline = @inline
-    a = FunctionIdentifier.new(cid, cargumentTypes, creturnType, cfunctionBlock, cinline)
-    a
-  end
 end
 
 # Iterates over the constraints network, validates the node constructions
 # and generates the postfix code
 class Iterator
-  attr_accessor :functions, :datatypes, :stack
+  attr_accessor :functions, :datatypes, :stack, :returnType
   def initialize
     @functions = {}
     @datatypes = []
@@ -40,6 +31,7 @@ class Iterator
     @uniqueid = 0
     @continues = []
     @breaks = []
+    @returnType = nil
   end
 
   def pushScope
@@ -80,8 +72,13 @@ class Iterator
 
   def newFunctionIdentifier(id, argumentTypes, returnType, functionBlock, inline)
     at = argumentTypes.join(",")
+
+    if @functions[[id, argumentTypes]] and @functions[[id, argumentTypes]].functionBlock != []
+      raise "Function already defined: #{id}(#{at})"
+    end
+
     fnLabel, fnAddress = getGotoIds("#{id}(#{at})")
-    if not inline
+    if not inline and functionBlock != []
       functionBlock.unshift(fnLabel)
     end
     @functions[[id, argumentTypes]] = FunctionIdentifier.new(id, argumentTypes, returnType, functionBlock, inline)
@@ -99,7 +96,7 @@ class Iterator
   end
 
   def findFunctionIdentifier(name, args)
-    return @functions[[name, args]]
+    @functions[[name, args]]
   end
 
   def getVariable(name)
@@ -271,6 +268,7 @@ module Node
     end
 
     def parse(iter)
+      iter.returnType = @returntype
       typelist = @argumentlist.map{|arg| arg[0]}
       typeliststring = typelist.join(" ")
 
@@ -298,6 +296,7 @@ module Node
       iter.popScope
 
       iter.newFunctionIdentifier(@id, typelist, @returntype, programreturn, false) #
+      iter.returnType = nil
       []
     end
   end
@@ -456,7 +455,10 @@ module Node
 
       iter.pushOperand Operand.new("int")
       e = @expression.parse(iter)
-      iter.popOperand
+      item = iter.popOperand
+      if item.datatype != iter.returnType
+        raise "Missmatched return type expected \"#{iter.returnType}\", was \"#{item.datatype}\""
+      end
 
       ["stacktop", rindex, "-", e, "assign_to_reference", rindex - 1, "pop", "goto"]
       # args, ret_val
@@ -643,7 +645,7 @@ module Node
         programlist << [functionId.functionBlock]
         #[ret_val]
       else
-        returnValue = Operand.new(:void) #reserve return value slot
+        returnValue = Operand.new("void") #reserve return value slot
 
         iter.pushOperand(returnValue)
         iter.pushOperand(Operand.new("int"))  #return address
@@ -719,6 +721,13 @@ module Node
     def parse(iter)
       iter.pushOperand(Operand.new("bool"))
       @value
+    end
+  end
+
+  class Void
+    def parse(iter)
+      iter.pushOperand(Operand.new("void"))
+      "void"
     end
   end
 end

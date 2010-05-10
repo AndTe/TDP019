@@ -82,7 +82,7 @@ class InfixParser
 
       rule :return do
         match("return", :expression) {|_, e| Node::Return.new(e)}
-        #match("return")
+        match("return") {Node::Return.new(Node::Void.new)}
       end
 
       rule :while do
