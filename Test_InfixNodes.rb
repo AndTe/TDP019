@@ -4,7 +4,7 @@ require 'Stack.rb'
 
 i = Iterator.new
 
-i.newDatatype(:void)
+i.newDatatype("void")
 i.newDatatype("int")
 i.newDatatype("bool")
 i.newFunctionIdentifier("+",["int", "int"], "int", ["+"], true)
@@ -22,16 +22,37 @@ i.newFunctionIdentifier("putchar",["int"], "int",
                         true)
 
 cppProgram = "
-int fib(int n) {
-    if (n <= 1) {
-        return n;
-    } else {
-        return (fib(n-1)+fib(n-2));
-    }
+void putdigit(int digit) {
+  putchar('0' + digit);
+  return;
 }
 
+void put_re(int number) {
+  if (number == 0) {
+    return;
+  }
+  int mult = number / 10;
+  int rest = number - mult * 10;
+  put_re(mult);
+  putdigit(rest);
+  return;
+}
+
+void put(int number) {
+  if(number == 0) {
+    putdigit(0);
+    return;
+  }
+  put_re(number);
+  return;
+}
+
+
 int main() {
-return fib(10);
+  put(0);
+  putchar('\\n');
+  put(100);
+  return 0;
 }"
 
 ips = InfixParseString(cppProgram)
@@ -39,5 +60,3 @@ postfixCode = labelAddressing(ips.parse(i))
 pps = PostfixParseString(postfixCode)
 wmStack = Stack.new
 p wmStack.eat(pps)
-
-
