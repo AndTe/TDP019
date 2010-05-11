@@ -720,14 +720,18 @@ module Node
 
     def parse(iter)
       iter.pushOperand(Operand.new("bool"))
-      @value
+      if(@value)
+        "true"
+      else
+        "false"
+      end
     end
   end
 
   class Void
     def parse(iter)
       iter.pushOperand(Operand.new("void"))
-      "void"
+      0
     end
   end
 end
