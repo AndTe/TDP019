@@ -7,7 +7,8 @@ class Operand
 end
 
 class FunctionIdentifier
-  attr_accessor :id, :argumentTypes, :returnType, :functionBlock, :inline, :address
+  attr_accessor :id, :argumentTypes, :returnType, :functionBlock, :inline
+  attr_accessor :address
   def initialize(id, argumentTypes, returnType, functionBlock, inline)
     @id = id
     @argumentTypes = argumentTypes
@@ -70,10 +71,12 @@ class Iterator
     @globalvariables << item
   end
 
-  def newFunctionIdentifier(id, argumentTypes, returnType, functionBlock, inline)
+  def newFunctionIdentifier(id, argumentTypes, returnType, functionBlock,
+                            inline)
     at = argumentTypes.join(",")
 
-    if @functions[[id, argumentTypes]] and @functions[[id, argumentTypes]].functionBlock != []
+    if @functions[[id, argumentTypes]] and
+        @functions[[id, argumentTypes]].functionBlock != []
       raise "Function already defined: #{id}(#{at})"
     end
 
@@ -81,7 +84,11 @@ class Iterator
     if not inline and functionBlock != []
       functionBlock.unshift(fnLabel)
     end
-    @functions[[id, argumentTypes]] = FunctionIdentifier.new(id, argumentTypes, returnType, functionBlock, inline)
+    @functions[[id, argumentTypes]] = FunctionIdentifier.new(id,
+                                                             argumentTypes,
+                                                             returnType,
+                                                             functionBlock,
+                                                             inline)
   end
 
   def newDatatype(name)
@@ -219,7 +226,9 @@ module Node
     end
 
     def parse(iter)
-      programreturn = [0, Address.new(:endprogram), Address.new("main()"), "goto", @globals.map{|s| s.parse(iter)}, Label.new(:endprogram), "exit"]
+      programreturn = [0, Address.new(:endprogram), Address.new("main()"),
+                       "goto", @globals.map{|s| s.parse(iter)},
+                       Label.new(:endprogram), "exit"]
       iter.functions.each_value{|fid|
         if not fid.inline
           programreturn << fid.functionBlock
@@ -295,7 +304,8 @@ module Node
 
       iter.popScope
 
-      iter.newFunctionIdentifier(@id, typelist, @returntype, programreturn, false) #
+      iter.newFunctionIdentifier(@id, typelist, @returntype, programreturn,
+                                 false) #
       iter.returnType = nil
       []
     end
@@ -457,10 +467,12 @@ module Node
       e = @expression.parse(iter)
       item = iter.popOperand
       if item.datatype != iter.returnType
-        raise "Missmatched return type expected \"#{iter.returnType}\", was \"#{item.datatype}\""
+        raise "Missmatched return type expected \"#{iter.returnType}\", " +
+          "was \"#{item.datatype}\""
       end
 
-      ["stacktop", rindex, "-", e, "assign_to_reference", rindex - 1, "pop", "goto"]
+      ["stacktop", rindex, "-", e, "assign_to_reference", rindex - 1, "pop",
+       "goto"]
       # args, ret_val
     end
   end
@@ -482,30 +494,6 @@ module Node
     def parse(iter)
       previousDepth, address = iter.topBreakAddress
       [iter.getStackDepth - previousDepth, "pop", address, "goto"]
-    end
-  end
-
-  class SimpleExpression
-    def initialize(lh, rh, operator)
-      raise "noooo use functionCall"
-      @lh = lh
-      @rh = rh
-      @operator = operator
-    end
-
-    def parse(iter)
-      lh = @lh.parse(iter)
-      rh = @rh.parse(iter)
-
-      rhdatatype = iter.popOperand.datatype
-      lhdatatype = iter.popOperand.datatype
-
-      returndatatype = iter.findFunctionIdentifier(@operator, [rhdatatype, lhdatatype]).returnType
-      if not returndatatype
-        raise "Undefined function: #{@operator}(#{rhdatatype}, #{lhdatatype})"
-      end
-      iter.pushOperand(Operand.new(returndatatype))
-      [lh, rh, @operator]
     end
   end
 
@@ -539,75 +527,10 @@ module Node
       end
 
       programreturn << "stacktop" << index << "-"
-      programreturn << "stacktop" << 1 << "-" << "reference_value" << "assign_to_reference"
+      programreturn << "stacktop" << 1 << "-" << "reference_value"
+      programreturn << "assign_to_reference"
       programreturn
 
-    end
-  end
-
-  class LessEquals
-    def initialize(lh, rh)
-      @lh = lh
-      @rh = rh
-    end
-
-    def parse(iter)
-      rh = @rh.parse(iter)
-      lh = @lh.parse(iter)
-
-      rhdatatype = iter.popOperand.datatype
-      lhdatatype = iter.popOperand.datatype
-
-      returndatatype = iter.findFunctionIdentifier("xor", [rhdatatype, lhdatatype]).returnType
-      if not returndatatype
-        raise "Undefined function: xor(#{rhdatatype}, #{lhdatatype})"
-      end
-      iter.pushOperand(Operand.new(returndatatype))
-      [rh, lh, "<", "not"]
-    end
-  end
-
-  class LogicalNot
-    def initialize(expression)
-      @expression = expression
-    end
-
-    def parse(iter)
-      programreturn = @expression.parse(iter)
-
-      returndatatype = iter.findFunctionIdentifier("not", ["bool"]).returnType
-      if not returndatatype
-        raise "Undefined function: not(#{returndatatype})"
-      end
-
-      iter.pushOperand(Operand.new(returndatatype))
-      [programreturn, "not"]
-    end
-  end
-
-  class LogicalXor
-    def initialize(lh, rh)
-      @lh = lh
-      @rh = rh
-    end
-
-    def parse(iter)
-      lh = @lh.parse(iter)
-      rh = @rh.parse(iter)
-
-      rhdatatype = iter.popOperand.datatype
-      lhdatatype = iter.popOperand.datatype
-
-      returndatatype = iter.findFunctionIdentifier(@operator, [rhdatatype, lhdatatype]).returnType
-      if not returndatatype
-        raise "Undefined function: #{@operator}(#{rhdatatype}, #{lhdatatype})"
-      end
-      iter.pushOperand(Operand.new(returndatatype))
-
-      [0, lh, rh, "stacktop", 2, "-",
-       "stacktop", 2, "-", "reference_value",
-       "stacktop", 2, "-", "reference_value", "or",
-       "assign_reference_value", "and", "not", "and"]
     end
   end
 
@@ -665,9 +588,7 @@ module Node
           #[arg1, arg2, ret_val] =>           #[ret_val, arg2]
           programlist << [returnLabel,
                           "stacktop", @argumentNodes.size, "-", "swap",
-
                           "assign_to_reference", @argumentNodes.size - 1, "pop"]
-
         end
         iter.popOperand
         iter.popOperand

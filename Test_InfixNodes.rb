@@ -47,11 +47,22 @@ void put(int number) {
   return;
 }
 
+void put(bool b) {
+  if(b)
+    putchar('T');
+  else
+    putchar('F');
+  return;
+}
 
 int main() {
   put(0);
   putchar('\\n');
   put(100);
+  putchar('\\n');
+  put(false);
+  putchar('\\n');
+  put(true);
   return 0;
 }"
 

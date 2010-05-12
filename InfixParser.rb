@@ -39,7 +39,8 @@ class InfixParser
       end
 
       rule :function_declaration do
-        match(:datatype, :function_identifier, "(", :argument_list, ")", :block) {|ret, id, _, arg , _, block|
+        match(:datatype, :function_identifier,
+              "(", :argument_list, ")", :block) {|ret, id, _, arg , _, block|
           Node::FunctionDeclaration.new(id, ret, arg, block)}
       end
 
@@ -54,7 +55,8 @@ class InfixParser
       end
 
       rule :block do
-        match("{", :statement_list, "}" ) {|_, sl, _| Node::Block.new(Node::StatementList.new(sl))}
+        match("{", :statement_list, "}" ) {|_, sl, _|
+          Node::Block.new(Node::StatementList.new(sl))}
       end
 
       rule :statement_list do
@@ -68,7 +70,8 @@ class InfixParser
         match(:return, :stmt_end) {|r, _| r}
         match("break", :stmt_end) {Node::Break.new()}
         match("continue", :stmt_end) {Node::Continue.new()}
-        match(:function_call, :stmt_end) {|m, _| Node::ExpressionStatement.new(m)}
+        match(:function_call, :stmt_end) {|m, _|
+          Node::ExpressionStatement.new(m)}
         match(:while) {|m| m}
         match(:for) {|m| m}
         match(:block) {|m| m}
@@ -86,11 +89,13 @@ class InfixParser
       end
 
       rule :while do
-        match("while", "(", :expression, ")", :statement) {|_, _, e, _, s| Node::WhileStatement.new(e, s)}
+        match("while", "(", :expression, ")", :statement) {|_, _, e, _, s|
+          Node::WhileStatement.new(e, s)}
       end
 
       rule :for do
-        match("for", "(", :for_declaration, ";", :for_expression, ";", :for_assignment, ")", :statement) {|_, _, vd, _, ce, _, ie, _, s|
+        match("for", "(", :for_declaration, ";", :for_expression, ";",
+              :for_assignment, ")", :statement) {|_, _, vd, _, ce, _, ie, _, s|
           Node::ForStatement.new(vd, ce, ie, s)}
       end
 
@@ -110,12 +115,16 @@ class InfixParser
       end
 
       rule :if do
-        match("if", "(", :expression, ")", :statement, "else", :statement) {|_, _, e, _, trues, _, falses| Node::IfStatement.new(e, trues, falses)}
-        match("if", "(", :expression, ")", :statement) {|_, _, e, _, s| Node::IfStatement.new(e, s, false)}
+        match("if", "(", :expression, ")", :statement, "else", :statement) {
+          |_, _, e, _, trues, _, falses|
+          Node::IfStatement.new(e, trues, falses)}
+        match("if", "(", :expression, ")", :statement) {|_, _, e, _, s|
+          Node::IfStatement.new(e, s, false)}
       end
 
       rule :variable_declaration do
-        match(:datatype, :variable, "=", :expression) {|t, v, _, e| Node::VariableDeclaration.new(t,v,e, true)}
+        match(:datatype, :variable, "=", :expression) {|t, v, _, e|
+          Node::VariableDeclaration.new(t,v,e, true)}
       end
 
       rule :assignment_statement do
@@ -123,7 +132,8 @@ class InfixParser
       end
 
       rule :assignment_expr do
-        match(:variable, "=", :expression){|v, _, rh| Node::AssignExpression.new(v, rh)}
+        match(:variable, "=", :expression){|v, _, rh|
+          Node::AssignExpression.new(v, rh)}
       end
 
       rule :function_identifier do
@@ -143,12 +153,14 @@ class InfixParser
       end
 
       rule :or_expr do
-        match(:or_expr, "or", :and_expr) {|lh, _, rh| Node::FunctionCall.new("or", [lh, rh])}
+        match(:or_expr, "or", :and_expr) {|lh, _, rh|
+          Node::FunctionCall.new("or", [lh, rh])}
         match(:and_expr) {|m| m}
       end
 
       rule :and_expr do
-        match(:and_expr, "and", :not_expr) {|lh, _, rh| Node::FunctionCall.new("and", [lh, rh])}
+        match(:and_expr, "and", :not_expr) {|lh, _, rh|
+          Node::FunctionCall.new("and", [lh, rh])}
         match(:not_expr) {|m| m}
       end
 
@@ -158,25 +170,35 @@ class InfixParser
       end
 
       rule :comparison_expr do
-        match(:comparison_expr,"<=", :plus_expr) {|lh, _, rh| Node::FunctionCall.new("<=", [lh, rh])}
-        match(:comparison_expr,">=", :plus_expr) {|lh, _, rh| Node::FunctionCall.new("<=", [rh, lh])}
-        match(:comparison_expr,"==", :plus_expr) {|lh, _, rh| Node::FunctionCall.new("==", [lh, rh])}
-        match(:comparison_expr,"!=", :plus_expr) {|lh, _, rh| Node::FunctionCall.new("!=", [lh, rh])}
-        match(:comparison_expr,"<", :plus_expr) {|lh, _, rh| Node::FunctionCall.new("<", [lh, rh])}
-        match(:comparison_expr,">", :plus_expr) {|lh, _, rh| Node::FunctionCall.new("<", [rh, lh])}
+        match(:comparison_expr,"<=", :plus_expr) {|lh, _, rh|
+          Node::FunctionCall.new("<=", [lh, rh])}
+        match(:comparison_expr,">=", :plus_expr) {|lh, _, rh|
+          Node::FunctionCall.new("<=", [rh, lh])}
+        match(:comparison_expr,"==", :plus_expr) {|lh, _, rh|
+          Node::FunctionCall.new("==", [lh, rh])}
+        match(:comparison_expr,"!=", :plus_expr) {|lh, _, rh|
+          Node::FunctionCall.new("!=", [lh, rh])}
+        match(:comparison_expr,"<", :plus_expr) {|lh, _, rh|
+          Node::FunctionCall.new("<", [lh, rh])}
+        match(:comparison_expr,">", :plus_expr) {|lh, _, rh|
+          Node::FunctionCall.new("<", [rh, lh])}
 
         match(:plus_expr) {|m| m}
       end
 
       rule :plus_expr do
-        match(:plus_expr, "+", :multiply_expr) {|lh, _, rh| Node::FunctionCall.new("+", [lh, rh])}
-        match(:plus_expr, "-", :multiply_expr) {|lh, _, rh| Node::FunctionCall.new("-", [lh, rh])}
+        match(:plus_expr, "+", :multiply_expr) {|lh, _, rh|
+          Node::FunctionCall.new("+", [lh, rh])}
+        match(:plus_expr, "-", :multiply_expr) {|lh, _, rh|
+          Node::FunctionCall.new("-", [lh, rh])}
         match(:multiply_expr) {|m| m}
       end
 
       rule :multiply_expr do
-        match(:multiply_expr, "*", :expression_value){|lh, _, rh| Node::FunctionCall.new("*", [lh, rh])}
-        match(:multiply_expr, "/", :expression_value){|lh, _, rh| Node::FunctionCall.new("/", [lh, rh])}
+        match(:multiply_expr, "*", :expression_value){|lh, _, rh|
+          Node::FunctionCall.new("*", [lh, rh])}
+        match(:multiply_expr, "/", :expression_value){|lh, _, rh|
+          Node::FunctionCall.new("/", [lh, rh])}
         match(:expression_value) {|m| m}
       end
 
@@ -201,12 +223,15 @@ class InfixParser
       end
 
       rule :function_call do
-        match(:identifier, "(", :function_call_arguments, ")") {|id, _, as, _| Node::FunctionCall.new(id, as)}
-        match(:identifier, "(", ")") {|id, _, _| Node::FunctionCall.new(id, [])}
+        match(:identifier, "(", :function_call_arguments, ")") {|id, _, as, _|
+          Node::FunctionCall.new(id, as)}
+        match(:identifier, "(", ")") {|id, _, _|
+          Node::FunctionCall.new(id, [])}
       end
 
       rule :function_call_arguments do
-        match(:expression, ",", :function_call_arguments) {|e1, _, es| [e1] + es}
+        match(:expression, ",", :function_call_arguments) {|e1, _, es|
+          [e1] + es}
         match(:expression) {|m| [m]}
         match() {[]}
       end
