@@ -20,8 +20,8 @@ class FunctionIdentifier
   end
 end
 
-# Iterates over the constraints network, validates the node constructions
-# and generates the postfix code
+# Iterates over the nodes, validates the node constructions and
+# generates the postfix code
 class Iterator
   attr_accessor :functions, :datatypes, :stack, :returnType
   def initialize
@@ -170,8 +170,8 @@ class Iterator
 
 end
 
-
-
+# Registers all Label locations and replaces all Address instances with
+# a correct absolute address.
 def labelAddressing(preprogram)
   preprogram.flatten!
   labels = {}
@@ -204,6 +204,8 @@ def labelAddressing(preprogram)
   preprogram.join(" ")
 end
 
+# Label is a marker placed within a postfix code, used inconjunction
+# with Address.
 class Label
   attr_accessor :id
   def initialize(id)
@@ -211,6 +213,8 @@ class Label
   end
 end
 
+# Address is a place holder for addresses, used inconjunction with
+# Label.
 class Address
   attr_accessor :id
   def initialize(id)
@@ -218,8 +222,10 @@ class Address
   end
 end
 
-# Namespace for constraints network nodes to avoid conflicts
+# Namespace for nodes to avoid conflicts
 module Node
+  # Program is the root node, it's make sure the program jumps to the
+  # main function.
   class Program
     def initialize(globals)
       @globals = globals
@@ -238,6 +244,8 @@ module Node
     end
   end
 
+  # VariableDeclaration generates code that places the expression
+  # result on the stack and associate it with a variable name.
   class VariableDeclaration
     def initialize(datatype, variable, expression, local)
       @datatype = datatype
@@ -268,6 +276,10 @@ module Node
     end
   end
 
+  # FunctionDeclaration associate the function code with the function
+  # identifier. The generated function code expects that the arguments
+  # is located on the top of the stack, with a reserved slot for
+  # return value and a return address.
   class FunctionDeclaration
     def initialize(id, returntype, argumentlist, block)
       @id = id
@@ -311,6 +323,9 @@ module Node
     end
   end
 
+  # Block creates a new local scope in the stack, making it possible
+  # to override a variable. At the end of the scope it removes the
+  # variables declared in the scope.
   class Block
     def initialize(statementlist)
       @statementlist = statementlist
@@ -337,6 +352,7 @@ module Node
     end
   end
 
+  # IfStatement generates code jumping to truebrach or falsebranch.
   class IfStatement
     def initialize(expression, truebranch, falsebranch=nil)
       @expression = expression
@@ -368,6 +384,7 @@ module Node
     end
   end
 
+  # WhileStatement generates code that corresponds to a while-loop.
   class WhileStatement
     def initialize(expression, statement)
       @expression = expression
@@ -399,6 +416,7 @@ module Node
     end
   end
 
+  # WhileStatement generates code that corresponds to a for-loop.
   class ForStatement
     def initialize(declaration, continueexpr, iterationexpr, statement)
       @declaration = declaration
@@ -453,6 +471,9 @@ module Node
     end
   end
 
+  # Generates code that stores expression result to the reserved
+  # return value slot, removes all variables in the function scope and
+  # consume the return address on the stack.
   class Return
     def initialize(expression)
       @expression = expression
@@ -477,6 +498,8 @@ module Node
     end
   end
 
+  # Removes all declared variables sinse the loopstart, then jumps to
+  # the end of the loop.
   class Continue
     def initialize()
     end
@@ -487,6 +510,8 @@ module Node
     end
   end
 
+  # Generates code that removes all declared variables sinse the
+  # loopstart, then exiting the loop.
   class Break
     def initialize()
     end
@@ -497,6 +522,8 @@ module Node
     end
   end
 
+  # Generates code that removes the value that an expression leaves on
+  # the stack.
   class ExpressionStatement
     def initialize(ae)
       @ae = ae
@@ -510,6 +537,8 @@ module Node
     end
   end
 
+  # Generates code for assigning a value to a variable and leaves a
+  # copy of the value on the stack.
   class AssignExpression
     def initialize(variableId, rh)
       @variableId = variableId
@@ -534,6 +563,15 @@ module Node
     end
   end
 
+  # FunctionCall generate code that places the arguments results on the stack.
+  # If the function is a non-inline function its also reserves a slot for the
+  # return value and the return address, then jumps to the function code. When
+  # returning from the function, FunctionCall expects the return address is
+  # consumed and that the return value is stored in reserved slot, removes
+  # arguments results and places the return value on top.
+  # If the function is a inline it paste the function code after the arguments
+  # code and expects that the function code removes the arguments results and
+  # leaves a result on the stack.
   class FunctionCall
     def initialize(id, argumentNodes)
       @id = id
@@ -600,6 +638,7 @@ module Node
     end
   end
 
+  # Generates code that copyes variable value to the top of the stack.
   class PushVariable
     def initialize(name)
       @name = name
@@ -623,6 +662,7 @@ module Node
     end
   end
 
+  # Integer generates code that leaves an integer value on the stack.
   class Integer
     def initialize(value)
       @value = value
@@ -634,6 +674,7 @@ module Node
     end
   end
 
+  # Boolean generates code that leaves a boolean value on the stack.
   class Boolean
     def initialize(value)
       @value = value
@@ -649,6 +690,9 @@ module Node
     end
   end
 
+  # Void generates code that leaves a value on the stack. (It only
+  # used when a function returns a void, to solve a special case of
+  # "return;")
   class Void
     def parse(iter)
       iter.pushOperand(Operand.new("void"))
