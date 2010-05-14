@@ -1,34 +1,45 @@
-require 'rdparse.rb'
-
 class PostfixParser
   def initialize
-    @PostParser = Parser.new("postfix parser") do
-      token(/\+/) {:plus}
-      token(/-/) {:minus}
-      token(/\*/) {:multiply}
-      token(/\//) {:divide}
-      token(/==/) {:equals}
-      token(/</) {:less}
-      token(/\s+/)
-      token(/\d+/) {|m| m.to_i }
-      token(/stacktop|pop|goto|swap|exit|output|input|not|and|or|if|assign_to_reference|reference_value|delete_reference|reference|true|false/) {|m| m.to_sym}
-
-      start :expr do
-        match(:atom, :expr) {|a, b| [a] + b}
-        match(:atom) {|a| [a]}
-      end
-
-      rule :atom do
-        match(:true) {true}
-        match(:false) {false}
-        match(Integer) {|a| a}
-        match(Symbol) {|a| a}
-      end
-    end
+   @keywords = {
+      "+" => :plus,
+      "-" => :minus,
+      "*" => :multiply,
+      "/" => :divide,
+      "==" => :equals,
+      "<" => :less,
+      "not" => :not,
+      "and" => :and,
+      "or" => :or,
+      "goto" => :goto,
+      "if" => :if,
+      "exit" => :exit,
+      "stacktop" => :stacktop,
+      "pop" => :pop,
+      "assign_to_reference" => :assign_to_reference,
+      "reference_value" => :reference_value,
+      "delete_reference" => :delete_reference,
+      "reference" => :reference,
+      "output" => :output,
+      "input" => :input,
+      "swap" => :swap,
+      "true" => true,
+      "false" => false}
   end
 
   def parse_string(str)
-    @PostParser.parse str
+    tokens = str.split(/\s+/)
+
+    # get Postfix instructions
+    pi = tokens.map{|token|
+      if @keywords[token] != nil
+        @keywords[token]
+      elsif token.match(/^\d+$/)
+        token.to_i
+      else
+        raise "Not a Postfix command: \"#{token}\""
+      end
+    }
+    pi
   end
 end
 
