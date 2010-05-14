@@ -48,9 +48,14 @@ class Test_PostfixParser < Test::Unit::TestCase
     assert_equal([:if], program)
   end
 
-  def test_print
-    program = PostfixParseString("print")
-    assert_equal([:print], program)
+  def test_output
+    program = PostfixParseString("output")
+    assert_equal([:output], program)
+  end
+
+  def test_input
+    program = PostfixParseString("input")
+    assert_equal([:input], program)
   end
 
   def test_swap
