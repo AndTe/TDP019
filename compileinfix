@@ -1,0 +1,52 @@
+#!/usr/bin/env ruby
+
+require 'InfixParser.rb'
+
+if ARGV.length == 1
+  infile = ARGV[0]
+  outfile = infile.chomp(File.extname(infile)) + ".pf"
+elsif ARGV.length == 2
+  infile, outfile = ARGV
+else
+  puts "Wrong number of arguments"
+  puts "./compileinfix <infile> <outfile>"
+  puts "alt."
+  puts "./compileinfix <infile>"
+  exit(1)
+end
+
+if not File.exist? infile
+  puts "Source file \"#{infile}\" do not exist!"
+  exit(1)
+end
+
+if File.exist? outfile
+  puts "Destination file \"#{outfile}\" already exist!"
+  exit(1)
+end
+
+i = Iterator.new
+
+i.newDatatype("void")
+i.newDatatype("int")
+i.newDatatype("bool")
+i.newFunctionIdentifier("+",["int", "int"], "int", ["+"], true)
+i.newFunctionIdentifier("-",["int", "int"], "int", ["-"], true)
+i.newFunctionIdentifier("*",["int", "int"], "int", ["*"], true)
+i.newFunctionIdentifier("/",["int", "int"], "int", ["/"], true)
+i.newFunctionIdentifier("<",["int", "int"], "int", ["<"], true)
+i.newFunctionIdentifier("<=",["int", "int"], "int", ["swap", "<", "not"], true)
+i.newFunctionIdentifier("==",["int", "int"], "int", ["=="], true)
+i.newFunctionIdentifier("!=",["int", "int"], "int", ["==", "not"], true)
+i.newFunctionIdentifier("and",["bool", "bool"], "bool", ["and"], true)
+i.newFunctionIdentifier("or",["bool", "bool"], "bool", ["or"], true)
+i.newFunctionIdentifier("putchar",["int"], "int",
+                        ["stacktop", "reference_value", "output"],
+                        true)
+
+ips = InfixParseFile(infile)
+postfixCode = labelAddressing(ips.parse(i))
+File.open(outfile, 'w') {|f| f.write(postfixCode)}
+
+puts "Wrote file #{outfile}"
+exit(0)
